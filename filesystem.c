@@ -12,6 +12,10 @@ Nuestro sistema tendra 1 GB de informacion.
 #include <stdio.h>
 #include <string.h>
 #include "LIL.h"
+#include <unistd.h>
+#include <fcntl.h>
+
+
 
 typedef struct dir
 {
@@ -20,9 +24,41 @@ typedef struct dir
 }dir_t;
 
 
-int BuscarNumeroDeInode(char* fileName, dir_t *currentDir); 
+int BuscarNumeroDeInode(char* fileName, dir_t *currentDir);
+void InfoDirectorio(void);  
+void CrearDirectorio(void); 
+void BorrarDirectorio(void);
+void CambiarDirectorio(void);
+void EditarArchivo(void);
+void AbrirArchivo(void); 
+void ReadData(char* buffer);
 
 inode_t inodeList[16][4] = {{}};
+
+void InfoDirectorio(){
+	printf("Info");
+}
+
+void CrearDirectorio(){
+	printf("CrearDirectorio");
+}
+
+void BorrarDirectorio(){
+	printf("BorrarDirectorio");
+}
+
+void CambiarDirectorio(){
+	printf("CambiarDirectorio");
+}
+
+void EditarArchivo(){
+	printf("EditarArchivo");
+}
+
+void AbrirArchivo(){
+	printf("AbrirArchivo");
+}
+
 
 void CrearArchivo(char* fileName, char* owner, dir_t *currentDir)
 {
@@ -67,12 +103,67 @@ int BuscarNumeroDeInode(char* fileName, dir_t *currentDir)
     return -1;
 }
 
+void ReadData(char* buffer){
+
+	if(strcmp(buffer, "InfoDirectory") == 0){
+		InfoDirectorio();
+		printf("1");
+	}
+	else if(strcmp(buffer, "CreateDirectory") == 0){
+		CrearDirectorio();
+		printf("2");
+	}
+	else if(strcmp(buffer, "DeleteDirectory") == 0){
+		BorrarDirectorio();
+		printf("3");
+	}
+	else if(strcmp(buffer, "ChangeDirectory") == 0){
+		CambiarDirectorio();
+		printf("4");
+	}
+	else if(strcmp(buffer, "CreateFile") == 0){
+		//CrearArchivo();
+		printf("5");
+	}
+	else if(strcmp(buffer, "DeleteFile") == 0){
+		//BorrarArchivo();
+		printf("6");
+	}	
+	else if(strcmp(buffer, "EditFile") == 0){
+		EditarArchivo();
+		printf("7");
+	}
+	else if(strcmp(buffer, "OpenFile") == 0){
+		AbrirArchivo();
+		printf("8");
+	}	
+}
+
+
+
 int main(void)
 {
 
     char boot[1024];
     int LBL[256];    
     dir_t root[64] = {{2, "."}, {2, ".."}};
+    char buffer[50] = "";
+    int fd;
+
+    mkfifo("Send2Fifo", 0666);
+
+
+	
+	while(1)
+	{
+	fd = open("Send2Fifo", O_RDONLY);
+	if(fd == -1){
+		printf("no se pudo abrir el archivo");
+	}
+	read(fd,buffer, 50);
+	close(fd); 
+	ReadData(buffer);
+	}
 
     /*
     int fd = open("pruebax", O_WRONLY || O_CREAT);
