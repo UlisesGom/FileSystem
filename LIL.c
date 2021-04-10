@@ -43,13 +43,20 @@ void LlenarLIL(inode_t inodeList[][4]){
 
 	for(int i = 0; i < 4; i++) { // aqui se cambia de bloque para revisar la lista de inodos
 		for(int j = 0; j < 16; j++){ //aqui se revisa inodo por inodo
-			if((inodeList[j][i].type == S_IFEMPTY) && (cuentaLIL <= 16)) //aqui se revisa el tipo de inodo, si esta vacio sera de tipo 0.
+			if((inodeList[j][i].type == TYPE_EMPTY) && (cuentaLIL <= 16)) //aqui se revisa el tipo de inodo, si esta vacio sera de tipo 0.
 			{
-				cuentaLIL++; // aqui se lleva la cuenta de cuantos inodos se han registrado en la LIL
-				LIL = (LISTITEM *) malloc(sizeof(LISTITEM)); //aqui asinara la direccion a LIL
-				LIL -> numeroInodo = j;
-				LIL -> numeroBloque = i;
-				enqueue(LIL); //Crea el los datos de la lista doblemente enlazada
+                if ((i == 0) && ((j == 0) | (j ==1))) // Ignora los primeros dos inodos
+                {
+                    continue;
+                }
+                else
+                {
+                    cuentaLIL++; // aqui se lleva la cuenta de cuantos inodos se han registrado en la LIL
+                    LIL = (LISTITEM *) malloc(sizeof(LISTITEM)); //aqui asinara la direccion a LIL
+                    LIL -> numeroInodo = j;
+                    LIL -> numeroBloque = i;
+                    enqueue(LIL); //Crea el los datos de la lista doblemente enlazada
+                }				
 			}
 		}
 	}
