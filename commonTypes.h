@@ -5,6 +5,9 @@
 
 #define BLOCK_SIZE 1024
 
+#define fgets_(str) fgets(str, sizeof str, stdin)
+#define my_itoa(x) my_itoa_buf(NULL, 0, x)
+
 typedef struct inode
 {
     int size;
@@ -15,3 +18,4 @@ typedef struct inode
     char permissions[6];
     void *contentTable[11];
 }inode_t; //ToDo: Definir contenidos del inode
+

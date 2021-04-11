@@ -16,7 +16,7 @@ Nuestro sistema tendra 1 GB de informacion.
 #include <fcntl.h>
 
 /************** Tipos y Constantes **********************************/ 
-#define TEST_MODE 
+//#define TEST_MODE 
 
 typedef struct dir
 {
@@ -38,20 +38,53 @@ void EditarArchivo(void);
 void AbrirArchivo(void);
 void ProcesarComando(char* buffer);
 
+char *my_itoa_buf(char *buf, size_t len, int num)
+{
+  static char loc_buf[sizeof(int) * 8]; /* not thread safe */
+
+  if (!buf)
+  {
+    buf = loc_buf;
+    len = sizeof(loc_buf);
+  }
+
+  if (snprintf(buf, len, "%d", num) == -1)
+    return ""; /* or whatever */
+
+  return buf;
+}
+
+void Write2Cliente(char* Data){
+	int fdw;
+
+	fdw = open("Send2Fifo", O_WRONLY);
+	write(fdw, Data, strlen(Data)+1);
+	close(fdw);
+}
 
 void InfoDirectorio()
 {
     dir_t *dirBLock = (dir_t*)currentDir->contentTable[0];
+    char bufferSalida[80];
 
     printf("*************************************************\n");
     for (int i = 0; i < 64; i++)
     {
         if (dirBLock->inode != 0) 
         {
-            printf("%d   %s\n", dirBLock->inode, dirBLock->name);
-        }    
-        dirBLock++;
+        	#ifdef TEST_MODE
+        		printf("%d   %s\n", dirBLock->inode, dirBLock->name);
+        	#else
+            strcat(bufferSalida, my_itoa(dirBLock->inode));
+            strcat(bufferSalida, "   ");
+            strcat(bufferSalida, dirBLock->name);
+            strcat(bufferSalida, "\n");
+            #endif
+            
+        }
+    dirBLock++;
     }
+    Write2Cliente(bufferSalida);
 }
 
 void CrearDirectorio(char* dirName)
@@ -213,7 +246,7 @@ int main(void)
     #ifdef TEST_MODE            
         while(1)
         {
-            fgets(buffer, sizeof(buffer), stdin); 
+            fgets_(buffer); 
             int len = strlen(buffer);
             if( buffer[len-1] == '\n') buffer[len-1] = 0;
             ProcesarComando(buffer);
