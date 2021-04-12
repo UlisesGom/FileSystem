@@ -14,9 +14,10 @@ Nuestro sistema tendra 1 GB de informacion.
 #include "LIL.h"
 #include <unistd.h>
 #include <fcntl.h>
+#include "LBL.h"
 
-/************** Tipos y Constantes **********************************/ 
-#define TEST_MODE 
+/************** Tipos y Constantes **********************************/
+#define TEST_MODE
 
 typedef struct dir
 {
@@ -24,10 +25,10 @@ typedef struct dir
     char name[12];
 }dir_t;
 
-/**************** Variables Globales ********************************/ 
+/**************** Variables Globales ********************************/
 
 inode_t inodeList[16][4] = {{}};
-inode_t* currentDir = &inodeList[2][0]; // Root 
+inode_t* currentDir = &inodeList[2][0]; // Root
 
 /***************** Funciones ****************************************/
 void InfoDirectorio(void);
@@ -46,10 +47,10 @@ void InfoDirectorio()
     printf("*************************************************\n");
     for (int i = 0; i < 64; i++)
     {
-        if (dirBLock->inode != 0) 
+        if (dirBLock->inode != 0)
         {
             printf("%d   %s\n", dirBLock->inode, dirBLock->name);
-        }    
+        }
         dirBLock++;
     }
 }
@@ -57,34 +58,36 @@ void InfoDirectorio()
 void CrearDirectorio(char* dirName)
 {
     /* Get a free inode from the LIL and get free block*/
-    LISTITEM* itemLIL = dequeue();   
-    dir_t *dirBLock = malloc(sizeof(dir_t) * 64);
+    LISTITEM* itemLIL = dequeue();
+    BLOCKITEM* itemLBL = dequeue_block();
+    dir_t *dirBLock = (dir_t)itemLBL.direccion_bloque;
     inode_t* newInode = &inodeList[itemLIL->numeroInodo][itemLIL->numeroBloque];
-    dir_t *currentDirBlock = currentDir->contentTable[0];       
+    dir_t *currentDirBlock = currentDir->contentTable[0];
 
-    /* Initialize new Inode */     
-    newInode->contentTable[0] = dirBLock;      
+    /* Initialize new Inode */
+    newInode->contentTable[0] = dirBLock;
     newInode->type = TYPE_DIR;
-    
-    /* Initialize current and top directory */ 
+    newInode->numero_bloque = itemLBL->numeroBloque;
+
+    /* Initialize current and top directory */
     strcpy(&dirBLock->name[0], ".");
-    dirBLock->inode = itemLIL->numeroInodo + (itemLIL->numeroBloque * 16);     
+    dirBLock->inode = itemLIL->numeroInodo + (itemLIL->numeroBloque * 16);
     dirBLock++;
     strcpy(&dirBLock->name[0], "..");
     dirBLock->inode = currentDirBlock->inode;
 
-    /* Search for an available space in the current directory */     
+    /* Search for an available space in the current directory */
     for (int i = 0; i < 64; i++)
     {
         if(currentDirBlock->inode == 0)
         {
-            currentDirBlock->inode = itemLIL->numeroInodo + (itemLIL->numeroBloque * 16);            
+            currentDirBlock->inode = itemLIL->numeroInodo + (itemLIL->numeroBloque * 16);
             strcpy(currentDirBlock->name, dirName);
             break;
         }
         else
         {
-            currentDirBlock++;            
+            currentDirBlock++;
         }
     }
 }
@@ -98,7 +101,8 @@ int BorrarDirectorio(char* targetDir)
         if(strcmp(targetDir, tempDir->name) == 0)
         {
             inodeList[tempDir->inode % 16][tempDir->inode / 16].type = TYPE_EMPTY;
-            tempDir->inode = 0; 
+            tempDir->inode = 0;
+            freeblock(inodeList[tempDir->inode % 16][tempDir->inode / 16].numero_bloque, tempDir);
             return 0;
         }
         else
@@ -118,7 +122,7 @@ int CambiarDirectorio(char* targetDir)
     {
         if(strcmp(targetDir, tempDir->name) == 0)
         {
-            currentDir = &inodeList[tempDir->inode % 16][tempDir->inode / 16];                     
+            currentDir = &inodeList[tempDir->inode % 16][tempDir->inode / 16];
             return 0;
         }
         else
@@ -158,22 +162,22 @@ void BorrarArchivo(char* fileName)
 
 void ProcesarComando(char* buffer){
 
-    char *comando, *parametro;         
+    char *comando, *parametro;
 
     comando = strtok(buffer, " ");
-    parametro = strtok(NULL, " "); 
+    parametro = strtok(NULL, " ");
 
 	if(strcmp(comando, "ls") == 0){
-		InfoDirectorio();		
+		InfoDirectorio();
 	}
 	else if(strcmp(comando, "mkdir") == 0){
-		CrearDirectorio(parametro);		
+		CrearDirectorio(parametro);
 	}
 	else if(strcmp(comando, "rm") == 0){
-		BorrarDirectorio(parametro);		
+		BorrarDirectorio(parametro);
 	}
 	else if(strcmp(comando, "cd") == 0){
-		CambiarDirectorio(parametro);		
+		CambiarDirectorio(parametro);
 	}
 	else if(strcmp(comando, "CreateFile") == 0){
 		//CrearArchivo();
@@ -204,23 +208,23 @@ int main(void)
     char buffer[50] = "";
     int fd;
 
-    /* Inicializa el directorio root*/ 
+    /* Inicializa el directorio root*/
     inodeList[2][0].contentTable[0] = root;
     inodeList[2][0].type = TYPE_DIR;
 
     LlenarLIL(inodeList);
 
-    #ifdef TEST_MODE            
+    #ifdef TEST_MODE
         while(1)
         {
-            fgets(buffer, sizeof(buffer), stdin); 
+            fgets(buffer, sizeof(buffer), stdin);
             int len = strlen(buffer);
             if( buffer[len-1] == '\n') buffer[len-1] = 0;
             ProcesarComando(buffer);
         }
     #endif
 
-    /* Inicializa el FIFO */ 
+    /* Inicializa el FIFO */
     mkfifo("Send2Fifo", 0666);
 
 	while(1)
@@ -233,7 +237,7 @@ int main(void)
 		close(fd);
 		ProcesarComando(buffer);
 	}
-    
+
     /*
     int fd = open("pruebax", O_WRONLY || O_CREAT);
     write(fd,boot, 1024);
@@ -241,7 +245,7 @@ int main(void)
     write(fd,LIL, 1024);
     write(fd, Lista_inode, 1024*4);
     write(fd, raiz, 1024);
-    */    
+    */
 
     return 0;
 }

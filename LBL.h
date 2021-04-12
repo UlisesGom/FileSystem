@@ -25,6 +25,7 @@ typedef struct listabloques{
 void enqueue_block(BLOCKITEM *);
 BLOCKITEM* dequeue_block();
 void LlenarLBL(void);
+void freeblock(int, LISTABLOQUES*);
 
 #endif // LBL_H_INCLUDED
 

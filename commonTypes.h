@@ -11,7 +11,8 @@ typedef struct inode
     char type;
     char owner;
     //int date;
-    int dummy[2]; // usado para llenar los 64 bytes del inodo
+    int numero_bloque;
+    int dummy; // usado para llenar los 64 bytes del inodo
     char permissions[6];
     void *contentTable[11];
 }inode_t; //ToDo: Definir contenidos del inode

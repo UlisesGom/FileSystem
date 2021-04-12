@@ -26,7 +26,7 @@ BLOCKITEM* dequeue_block(){
     temp_1 = temp->next;
     if(temp_1 == (BLOCKITEM*)&head_block){ // Este bloque es el como el remember inode
             LBL_Refill(temp);
-            temp = NULL;
+
     }
     else{
         head_block.first = temp->next;
@@ -81,12 +81,22 @@ void LBL_Refill(BLOCKITEM *Ultimo){
     int cuenta=0;
 
 
-    while(temp->next != NULL || cuenta>255){
+    while((temp->next != NULL) && (cuenta<255)){
        temp= temp->next;
+       listhead = temp;
        Ultimo= (BLOCKITEM *) malloc(sizeof(BLOCKITEM));
        Ultimo->numeroBloque = temp->numeroBloque;
        Ultimo->direccion_bloque = temp->next;
        enqueue_block(Ultimo);
        cuenta++;
     }
+
+}
+
+void freeblock(int numero_bloque, LISTABLOQUES* direccion){
+
+
+    direccion->numeroBloque = numero_bloque;
+    direccion->next = listhead;
+    head_block->last->direccion_bloque = direccion;
 }
