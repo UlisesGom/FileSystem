@@ -17,8 +17,8 @@ Nuestro sistema tendra 1 GB de informacion.
 #include "LBL.h"
 
 
-/************** Tipos y Constantes **********************************/ 
-//#define TEST_MODE 
+/************** Tipos y Constantes **********************************/
+#define TEST_MODE
 
 typedef struct dir
 {
@@ -83,7 +83,7 @@ void InfoDirectorio()
             strcat(bufferSalida, dirBLock->name);
             strcat(bufferSalida, "\n");
             #endif
-            
+
         }
     dirBLock++;
 
@@ -96,10 +96,10 @@ void CrearDirectorio(char* dirName)
     /* Get a free inode from the LIL and get free block*/
     LISTITEM* itemLIL = dequeue();
     BLOCKITEM* itemLBL = dequeue_block();
-    dir_t *dirBLock = (dir_t)itemLBL.direccion_bloque;
+    dir_t *dirBLock = (dir_t*)itemLBL->direccion_bloque;
     inode_t* newInode = &inodeList[itemLIL->numeroInodo][itemLIL->numeroBloque];
     dir_t *currentDirBlock = currentDir->contentTable[0];
-
+    
     /* Initialize new Inode */
     newInode->contentTable[0] = dirBLock;
     newInode->type = TYPE_DIR;
@@ -130,15 +130,16 @@ void CrearDirectorio(char* dirName)
 
 int BorrarDirectorio(char* targetDir)
 {
-	dir_t *tempDir = currentDir->contentTable[0];
+	dir_t *tempDir = currentDir->contentTable[0];    
 
     for (int i = 0; i < 64; i++)
     {
         if(strcmp(targetDir, tempDir->name) == 0)
-        {
-            inodeList[tempDir->inode % 16][tempDir->inode / 16].type = TYPE_EMPTY;
+        {            
+            inode_t *currInode = &inodeList[tempDir->inode % 16][tempDir->inode / 16]; 
+            currInode->type = TYPE_EMPTY;
             tempDir->inode = 0;
-            freeblock(inodeList[tempDir->inode % 16][tempDir->inode / 16].numero_bloque, tempDir);
+            freeblock(currInode->numero_bloque, (LISTABLOQUES *)tempDir);
             return 0;
         }
         else
@@ -181,7 +182,31 @@ void AbrirArchivo(){
 
 void CrearArchivo(char* fileName)
 {
-    /* Get a free inode from de LIL */
+      /* Get a free inode from the LIL and get free block*/
+    LISTITEM* itemLIL = dequeue();
+    BLOCKITEM* itemLBL = dequeue_block();
+    inode_t* newInode = &inodeList[itemLIL->numeroInodo][itemLIL->numeroBloque];
+    dir_t *currentDirBlock = currentDir->contentTable[0];
+
+	/* Initialize new Inode */
+    newInode->contentTable[0] = itemLBL->direccion_bloque;
+    newInode->type = TYPE_FILE;
+    newInode->numero_bloque = itemLBL->numeroBloque;
+
+	 /* Search for an available space in the current directory */
+    for (int i = 0; i < 64; i++)
+    {
+        if(currentDirBlock->inode == 0)
+        {
+            currentDirBlock->inode = itemLIL->numeroInodo + (itemLIL->numeroBloque * 16);
+            strcpy(currentDirBlock->name, fileName);
+            break;
+        }
+        else
+        {
+            currentDirBlock++;
+        }
+    }
 }
 
 void BorrarArchivo(char* fileName)
@@ -215,8 +240,8 @@ void ProcesarComando(char* buffer){
 	else if(strcmp(comando, "cd") == 0){
 		CambiarDirectorio(parametro);
 	}
-	else if(strcmp(comando, "CreateFile") == 0){
-		//CrearArchivo();
+	else if(strcmp(comando, "cat") == 0){
+		CrearArchivo(parametro);
 		printf("5");
 	}
 	else if(strcmp(comando, "DeleteFile") == 0){
@@ -253,7 +278,7 @@ int main(void)
     #ifdef TEST_MODE
         while(1)
         {
-            fgets_(buffer); 
+            fgets_(buffer);
             int len = strlen(buffer);
             if( buffer[len-1] == '\n') buffer[len-1] = 0;
             ProcesarComando(buffer);

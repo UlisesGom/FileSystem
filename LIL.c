@@ -23,7 +23,8 @@ LISTITEM* dequeue(){
     LISTITEM * temp;
 
     temp = head.first;
-    if(temp == (LISTITEM*)&head){ // Este bloque es el remember inode
+    if(temp == (LISTITEM*)&head)  // Este bloque es el remember inode
+    {
         LlenarLIL(inodeList);
         temp = head.first;
         if(temp == (LISTITEM*)&head){ //aqui verifica que si haya inodos disponibles
