@@ -4,6 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include "commonTypes.h"
 
 
 /* Declaración de funciones */
@@ -42,62 +43,61 @@ void Write2FileSystem(char* Data){
 void InfoDirectory(){
 
 	int fdw;
-	char arr1[50];
+	char arr[50];
 
 	printf("InfoDIrectory\n");
-	Write2FileSystem("InfoDirectory");
+	Write2FileSystem("ls");
 
 	fdw = open("Send2Fifo", O_RDONLY);
-	read(fdw, arr1, sizeof(arr1));
+	read(fdw, arr, sizeof(arr));
 	close(fdw);
 	printf("Aquí debería regresar la información del directorio\n ");
-	printf("%s\n", arr1);
+	printf("%s\n", arr);
 }
 
 void CreateDirectory(){
-	int fdw;
+	char arr[20];
+	char arr2send[50] = "mkdir";
 
-	printf("CreateDirectory");
-	Write2FileSystem("CreateDirectorye");
+	printf("Escribe el nombre del nuevo directorio \n");
+	fgets_(arr);
+	strcat(arr2send, " ");
+	strcat(arr2send, arr);
+
+	Write2FileSystem(arr2send);
 }
 
 void DeleteDirectory(){
-	int fdw;
 
 	printf("DeleteDirectory");
-	Write2FileSystem("DeleteDirectory");
+	Write2FileSystem("rm");
 }
 
 void ChangeDirectory(){
-	int fdw;
 
 	printf("ChangeDirectory");
-	Write2FileSystem("ChangeDirectory");
+	Write2FileSystem("cd");
 }
 
 void CreateFile(){
-	int fdw;
 
 	printf("CreateFile");
 	Write2FileSystem("CreateFile");
 }
 
 void DeleteFile(){
-	int fdw;
 
 	printf("DeleteFile");
 	Write2FileSystem("DeleteFile");
 }
 
 void EditFile(){
-	int fdw;
 
 	printf("EditFile");
 	Write2FileSystem("EditFile");
 }
 
 void OpenFile(){
-	int fdw;
 
 	printf("OpenFile");
 	Write2FileSystem("OpenFile");
@@ -106,9 +106,9 @@ void OpenFile(){
 
 void main(void)
 {
-	int fdw;
 	int opciones;
 	char arr2[50] = "prueba";
+	char c;
 
 	while(1)
 	{
@@ -126,6 +126,7 @@ void main(void)
 		printf("7.- Abrir un archivo\n");
 
 		scanf("%d", &opciones);
+		while((c = getchar()) != '\n' && c != EOF);
 
 		switch(opciones)
 		{
