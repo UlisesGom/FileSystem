@@ -7,7 +7,7 @@ typedef struct blockitem {
     struct blockitem *next;
     struct blockitem *prev;
 	int numeroBloque;
-	int *direccion_bloque;
+	int *direccion_bloque;  // creo que cambiare el tipo de dato de esta variable por un: void* direccion_bloque; , asi sera mas clara la implementacion.
 } BLOCKITEM;
 
 typedef struct {
