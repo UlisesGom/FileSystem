@@ -5,6 +5,7 @@
 /********** Variables Globales ***********/
 
 static LISTHDR head;
+extern inode_t inodeList[16][4];
 
 /*********** Funciones ******************/
 
@@ -22,8 +23,16 @@ LISTITEM* dequeue(){
     LISTITEM * temp;
 
     temp = head.first;
-    if(temp == (LISTITEM*)&head){
-        temp = NULL;
+    if(temp == (LISTITEM*)&head){ // Este bloque es el remember inode
+        LlenarLIL(inodeList);
+        temp = head.first;
+        if(temp == (LISTITEM*)&head){ //aqui verifica que si haya inodos disponibles
+            temp = NULL;
+            }
+        else{
+            head.first = temp->next;
+            head.last->prev = (LISTITEM*)&head;
+            }
     }
     else{
         head.first = temp->next;
@@ -37,7 +46,7 @@ void LlenarLIL(inode_t inodeList[][4]){
 	int cuentaLIL = 0;
 	LISTITEM *LIL;
 
-    /* Initialize LIL */ 
+    /* Initialize LIL */
     head.first = (LISTITEM*) &head;
     head.last = (LISTITEM*) &head;
 
@@ -56,7 +65,7 @@ void LlenarLIL(inode_t inodeList[][4]){
                     LIL -> numeroInodo = j;
                     LIL -> numeroBloque = i;
                     enqueue(LIL); //Crea el los datos de la lista doblemente enlazada
-                }				
+                }
 			}
 		}
 	}
