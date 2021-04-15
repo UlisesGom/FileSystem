@@ -274,6 +274,7 @@ int main(void)
     inodeList[2][0].type = TYPE_DIR;
 
     LlenarLIL(inodeList);
+    LlenarLBL();
 
     #ifdef TEST_MODE
         while(1)
