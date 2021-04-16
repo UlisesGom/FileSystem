@@ -36,8 +36,9 @@ void InfoDirectorio(void);
 void CrearDirectorio(char* dirName);
 int BorrarDirectorio(char* targetDir);
 int CambiarDirectorio(char* targetDir);
-void EditarArchivo(void);
-void AbrirArchivo(void);
+int EditarArchivo(char* targetDir, char* content);
+int AbrirArchivo(char* targetDir);
+int BorrarArchivo(char* fileName);
 void ProcesarComando(char* buffer);
 
 char *my_itoa_buf(char *buf, size_t len, int num)
@@ -139,7 +140,7 @@ int BorrarDirectorio(char* targetDir)
             inode_t *currInode = &inodeList[tempDir->inode % 16][tempDir->inode / 16]; 
             currInode->type = TYPE_EMPTY;
             tempDir->inode = 0;
-            freeblock(currInode->numero_bloque, (LISTABLOQUES *)tempDir);
+            //freeblock(currInode->numero_bloque, (LISTABLOQUES *)tempDir);
             return 0;
         }
         else
@@ -171,27 +172,108 @@ int CambiarDirectorio(char* targetDir)
     return -1;
 }
 
-void EditarArchivo(){
-	printf("EditarArchivo");
+int EditarArchivo(char* targetDir, char* content)
+{
+	dir_t *tempDir = currentDir->contentTable[0]; 
+    int bytesNeeded = strlen(content);
+    int blocksUsed = 0;     
+
+    for (int i = 0; i < 64; i++)
+    {
+        if(strcmp(targetDir, tempDir->name) == 0)
+        {            
+            inode_t *currInode = &inodeList[tempDir->inode % 16][tempDir->inode / 16]; 
+            currInode->size = bytesNeeded; 
+
+            printf("Storing %d bytes in %s\n", bytesNeeded, targetDir);
+
+            /* Copia el contenido a los bloques */ 
+            while(bytesNeeded > 0)
+            {      
+                /* Obtener un nuevo bloque para el contenido */             
+                BLOCKITEM* newBlock = dequeue_block();                
+                currInode->contentTable[blocksUsed] = newBlock->direccion_bloque;
+
+                printf("Storing block %d...\n", blocksUsed); 
+
+                /* Usar mas de un bloque cuando el contenido sea mas grande que el bloque mismo */ 
+                if (bytesNeeded > BLOCK_SIZE)
+                {                                    
+                    memcpy(currInode->contentTable[blocksUsed], content, BLOCK_SIZE);                                       
+                    content += BLOCK_SIZE; // Apuntar al siguiente fragmento del contenido                    
+                    bytesNeeded -= BLOCK_SIZE;  // Restar el numero de bytes copiados
+                    blocksUsed++; // Ir al siguiente bloque
+                }
+                else
+                {
+                    memcpy(currInode->contentTable[blocksUsed], content, bytesNeeded);
+                    bytesNeeded = 0;                    
+                }                
+            }
+                    
+            return 0;
+        }
+        else
+        {
+            tempDir++;
+        }
+    }
+
+    return -1;
 }
 
-void AbrirArchivo(){
-	printf("AbrirArchivo");
+int AbrirArchivo(char* targetDir)
+{
+	dir_t *tempDir = currentDir->contentTable[0]; 
+    int blocksOpened = 0;       
+
+    for (int i = 0; i < 64; i++)
+    {
+        if(strcmp(targetDir, tempDir->name) == 0)
+        {            
+            inode_t *currInode = &inodeList[tempDir->inode % 16][tempDir->inode / 16]; 
+            int remainingBytes = currInode->size;  
+
+            /* Imprime el contenido de los bloques */ 
+            while(remainingBytes > 0)
+            {  
+                /* Imprime todos los bloques usados para guardar el contenido */ 
+                if(remainingBytes >= BLOCK_SIZE) 
+                {
+                    printf("%.*s", (int)BLOCK_SIZE, (char *)currInode->contentTable[blocksOpened]);
+                    remainingBytes -= BLOCK_SIZE;
+                }                                            
+                else
+                {
+                    printf("%.*s", remainingBytes, (char *)currInode->contentTable[blocksOpened]);
+                    remainingBytes = 0;
+                }
+
+                blocksOpened++; // Avanza al siguiente bloque                                        
+            }
+                    
+            return 0;
+        }
+        else
+        {
+            tempDir++;
+        }
+    }
+
+    return -1;
 }
 
 
-void CrearArchivo(char* fileName)
+int CrearArchivo(char* fileName)
 {
       /* Get a free inode from the LIL and get free block*/
-    LISTITEM* itemLIL = dequeue();
-    BLOCKITEM* itemLBL = dequeue_block();
+    LISTITEM* itemLIL = dequeue();    
     inode_t* newInode = &inodeList[itemLIL->numeroInodo][itemLIL->numeroBloque];
     dir_t *currentDirBlock = currentDir->contentTable[0];
 
-	/* Initialize new Inode */
-    newInode->contentTable[0] = itemLBL->direccion_bloque;
-    newInode->type = TYPE_FILE;
-    newInode->numero_bloque = itemLBL->numeroBloque;
+	/* Initialize new Inode */    
+    newInode->type = TYPE_FILE;  
+    newInode->size = 0;  
 
 	 /* Search for an available space in the current directory */
     for (int i = 0; i < 64; i++)
@@ -209,15 +291,24 @@ void CrearArchivo(char* fileName)
     }
 }
 
-void BorrarArchivo(char* fileName)
+int BorrarArchivo(char* fileName)
 {
-    /* Find the file to be deleted */
-    int inodeId;// = BuscarNumeroDeInode(fileName, currentDir);
+    dir_t *tempDir = currentDir->contentTable[0];    
 
-    if (inodeId != -1)
+    for (int i = 0; i < 64; i++)
     {
-        inode_t* fileInode = &inodeList[inodeId / 16][inodeId % 16];
-        fileInode->type = TYPE_EMPTY;
+        if(strcmp(fileName, tempDir->name) == 0)
+        {            
+            inode_t *currInode = &inodeList[tempDir->inode % 16][tempDir->inode / 16]; 
+            currInode->type = TYPE_EMPTY;
+            tempDir->inode = 0;
+            //freeblock(currInode->numero_bloque, (LISTABLOQUES *)tempDir);
+            return 0;
+        }
+        else
+        {
+            tempDir++;
+        }
     }
 }
 
@@ -241,20 +332,16 @@ void ProcesarComando(char* buffer){
 		CambiarDirectorio(parametro);
 	}
 	else if(strcmp(comando, "cat") == 0){
-		CrearArchivo(parametro);
-		printf("5");
+		CrearArchivo(parametro);		
 	}
-	else if(strcmp(comando, "DeleteFile") == 0){
-		//BorrarArchivo();
-		printf("6");
+	else if(strcmp(comando, "del") == 0){
+		BorrarArchivo(parametro);		
 	}
-	else if(strcmp(comando, "EditFile") == 0){
-		EditarArchivo();
-		printf("7");
+	else if(strcmp(comando, "edit") == 0){
+		EditarArchivo(parametro, "GNU/Linux es la denominación técnica y generalizada que reciben una serie de sistemas operativos de tipo Unix, que también suelen ser de código abierto, multiplataforma, multiusuario y multitarea.1​ Estos sistemas operativos están formados mediante la combinación de varios proyectos, entre los cuales destaca el entorno GNU, encabezado por el programador estadounidense Richard Stallman junto a la Free Software Foundation, una fundación cuyo propósito es difundir el software libre, así como también el núcleo de sistema operativo conocido como «Linux», encabezado por el programador finlandés Linus Torvalds");
 	}
-	else if(strcmp(comando, "OpenFile") == 0){
-		AbrirArchivo();
-		printf("8");
+	else if(strcmp(comando, "open") == 0){
+		AbrirArchivo(parametro);		
 	}
 }
 

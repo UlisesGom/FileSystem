@@ -58,7 +58,7 @@ void LlenarLBL(void){
     { 
         LBL = (BLOCKITEM *) malloc(sizeof(BLOCKITEM));
         LBL->numeroBloque = i;
-        LBL->direccion_bloque = malloc(sizeof(int) * 256); // Aqui se crean los primeros bloques en la memoria que no estan utilizados por el SO.
+        LBL->direccion_bloque = malloc(BLOCK_SIZE); // Aqui se crean los primeros bloques en la memoria que no estan utilizados por el SO.
         enqueue_block(LBL);
     }
 
@@ -73,7 +73,7 @@ void Bloques_ligados(LISTABLOQUES *Ultimo){// aqui asignamos los bloques que no 
 
     for(int i = 600; i > 264; i--)
     {
-        temp = (LISTABLOQUES *)malloc(sizeof(int) * 256);
+        temp = (LISTABLOQUES *)malloc(BLOCK_SIZE);
         temp->numeroBloque = i;
         temp->next = listhead;
         listhead = temp;

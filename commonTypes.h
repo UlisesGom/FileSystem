@@ -3,8 +3,6 @@
 #define TYPE_FILE    0x1   //regular file
 #define TYPE_DIR    0x2   //directory
 
-#define BLOCK_SIZE 1024
-
 #define fgets_(str) fgets(str, sizeof str, stdin)
 #define my_itoa(x) my_itoa_buf(NULL, 0, x)
 
