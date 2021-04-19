@@ -68,7 +68,9 @@ void LlenarLIL(inode_t inodeList[][4]){
 	}
 }
 
-void freeinode(int inodo, LISTITEM* temp){
+void freeinode(int inodo){
+    LISTITEM* temp;
+    temp = (LISTITEM *) malloc(sizeof(LISTITEM)); 
     temp->numeroInodo = inodo%16;
     temp->numeroBloque = inodo/16;
     int contador =0;
