@@ -20,3 +20,4 @@ typedef struct {
 void enqueue(LISTITEM *item);
 LISTITEM* dequeue();
 void LlenarLIL(inode_t inodeList[][4]);
+void freeinode(int inodo, LISTITEM* temp);
