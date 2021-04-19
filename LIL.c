@@ -30,10 +30,13 @@ LISTITEM* dequeue(){
         if(temp == (LISTITEM*)&head){ //aqui verifica que si haya inodos disponibles
             temp = NULL;
             }
+	else{
+        	head.first = temp->next;
+	}
     }
     else{
         head.first = temp->next;
-        head.last->prev = (LISTITEM*)&head;
+        //head.last->prev = (LISTITEM*)&head;
     }
     return temp;
 }
