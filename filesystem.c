@@ -18,7 +18,7 @@ Nuestro sistema tendra 1 GB de informacion.
 
 
 /************** Tipos y Constantes **********************************/
-#define TEST_MODE
+//#define TEST_MODE
 
 typedef struct dir
 {
@@ -30,6 +30,7 @@ typedef struct dir
 
 inode_t inodeList[16][4] = {{}};
 inode_t* currentDir = &inodeList[2][0]; // Root
+char owners[10];
 
 /***************** Funciones ****************************************/
 void InfoDirectorio(void);
@@ -68,7 +69,7 @@ void Write2Cliente(char* Data){
 void InfoDirectorio()
 {
     dir_t *dirBLock = (dir_t*)currentDir->contentTable[0];
-    char bufferSalida[80];
+    char bufferSalida[80] = "";
 
     printf("*************************************************\n");
     for (int i = 0; i < 64; i++)
@@ -89,7 +90,9 @@ void InfoDirectorio()
     dirBLock++;
 
     }
-    Write2Cliente(bufferSalida);
+    #ifndef TEST_MODE
+    	Write2Cliente(bufferSalida);
+    #endif
 }
 
 void CrearDirectorio(char* dirName)
@@ -206,11 +209,13 @@ int EditarArchivo(char* targetDir, char* content)
                 }
                 else
                 {
-                    memcpy(currInode->contentTable[blocksUsed], content, bytesNeeded);
+                	memcpy(currInode->contentTable[blocksUsed], content, bytesNeeded);
                     bytesNeeded = 0;                    
                 }                
             }
-                    
+            #ifndef TEST_MODE
+				Write2Cliente("Se escribió correctamente");   
+			#endif  
             return 0;
         }
         else
@@ -218,14 +223,17 @@ int EditarArchivo(char* targetDir, char* content)
             tempDir++;
         }
     }
-
+    #ifndef TEST_MODE
+    	Write2Cliente("No se escribió, puede que el archivo no exista");
+    #endif
     return -1;
 }
 
 int AbrirArchivo(char* targetDir)
 {
 	dir_t *tempDir = currentDir->contentTable[0]; 
-    int blocksOpened = 0;       
+    int blocksOpened = 0;  
+    char *bufferSalida;     
 
     for (int i = 0; i < 64; i++)
     {
@@ -240,18 +248,27 @@ int AbrirArchivo(char* targetDir)
                 /* Imprime todos los bloques usados para guardar el contenido */ 
                 if(remainingBytes >= BLOCK_SIZE) 
                 {
-                    printf("%.*s", (int)BLOCK_SIZE, (char *)currInode->contentTable[blocksOpened]);
-                    remainingBytes -= BLOCK_SIZE;
+	                #ifdef TEST_MODE
+	                    printf("%.*s", (int)BLOCK_SIZE, (char *)currInode->contentTable[blocksOpened]);
+
+	                #else
+	           			Write2Cliente((char *)currInode->contentTable[blocksOpened]); 
+	           		#endif
+	                remainingBytes -= BLOCK_SIZE;
                 }                                            
                 else
                 {
-                    printf("%.*s", remainingBytes, (char *)currInode->contentTable[blocksOpened]);
-                    remainingBytes = 0;
+                	#ifdef TEST_MODE
+                    	printf("%.*s", remainingBytes, (char *)currInode->contentTable[blocksOpened]);
+                    	 
+                    #else
+                    	Write2Cliente((char *)currInode->contentTable[blocksOpened]); 
+           			#endif
+           			remainingBytes = 0;
                 }
-
                 blocksOpened++; // Avanza al siguiente bloque                                        
             }
-                    
+            //Write2Cliente("$");
             return 0;
         }
         else
@@ -314,10 +331,11 @@ int BorrarArchivo(char* fileName)
 
 void ProcesarComando(char* buffer){
 
-    char *comando, *parametro;
+    char *comando, *parametro, *texto;
 
     comando = strtok(buffer, " ");
     parametro = strtok(NULL, " ");
+    texto = strtok(NULL, "*");
 
 	if(strcmp(comando, "ls") == 0){
 		InfoDirectorio();
@@ -338,7 +356,7 @@ void ProcesarComando(char* buffer){
 		BorrarArchivo(parametro);		
 	}
 	else if(strcmp(comando, "edit") == 0){
-		EditarArchivo(parametro, "GNU/Linux es la denominación técnica y generalizada que reciben una serie de sistemas operativos de tipo Unix, que también suelen ser de código abierto, multiplataforma, multiusuario y multitarea.1​ Estos sistemas operativos están formados mediante la combinación de varios proyectos, entre los cuales destaca el entorno GNU, encabezado por el programador estadounidense Richard Stallman junto a la Free Software Foundation, una fundación cuyo propósito es difundir el software libre, así como también el núcleo de sistema operativo conocido como «Linux», encabezado por el programador finlandés Linus Torvalds");
+		EditarArchivo(parametro, texto);
 	}
 	else if(strcmp(comando, "open") == 0){
 		AbrirArchivo(parametro);		
@@ -353,7 +371,7 @@ int main(void)
     char boot[1024];
     int LBL[256];
     dir_t root[64] = {{2, "."}, {2, ".."}};
-    char buffer[50] = "";
+    char buffer[50] = "", buffer2[15];
     int fd;
 
     /* Inicializa el directorio root*/
@@ -375,6 +393,11 @@ int main(void)
 
     /* Inicializa el FIFO */
     mkfifo("Send2Fifo", 0666);
+    
+    fd = open("Send2Fifo", O_RDONLY);
+    read(fd,buffer2, 15);
+	close(fd);
+	strcpy(owners, buffer2);
 
 	while(1)
 	{
