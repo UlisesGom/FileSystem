@@ -30,10 +30,6 @@ LISTITEM* dequeue(){
         if(temp == (LISTITEM*)&head){ //aqui verifica que si haya inodos disponibles
             temp = NULL;
             }
-        else{
-            head.first = temp->next;
-            head.last->prev = (LISTITEM*)&head;
-            }
     }
     else{
         head.first = temp->next;
@@ -53,7 +49,7 @@ void LlenarLIL(inode_t inodeList[][4]){
 
 	for(int i = 0; i < 4; i++) { // aqui se cambia de bloque para revisar la lista de inodos
 		for(int j = 0; j < 16; j++){ //aqui se revisa inodo por inodo
-			if((inodeList[j][i].type == TYPE_EMPTY) && (cuentaLIL <= 16)) //aqui se revisa el tipo de inodo, si esta vacio sera de tipo 0.
+			if((inodeList[j][i].type == TYPE_EMPTY) && (cuentaLIL < 16)) //aqui se revisa el tipo de inodo, si esta vacio sera de tipo 0.
 			{
                 if ((i == 0) && ((j == 0) | (j ==1))) // Ignora los primeros dos inodos
                 {
@@ -70,4 +66,35 @@ void LlenarLIL(inode_t inodeList[][4]){
 			}
 		}
 	}
+}
+
+void freeinode(int inodo, LISTITEM* temp){
+    temp->numeroInodo = inodo%16;
+    temp->numeroBloque = inodo/16;
+    int contador =0;
+    LISTITEM* temp1;
+    temp1 = head.first;
+    while(temp1 != (LISTITEM*)&head){
+        contador++;
+        temp1 = temp1->next;
+    }
+
+    
+    if(contador < 16){
+        temp1 = head.first;
+        head.first = temp;
+        temp->next = temp1;
+        temp->prev = (LISTITEM*)&head;
+        temp1->prev = temp;
+    }
+    else{
+        temp1 = head.last;
+        if(inodo < (temp1->numeroInodo+ (temp1->numeroBloque*16))){ //Este es el remember inode
+            head.last = temp;
+            temp->next = temp1->next;
+            temp->prev = temp1->prev;
+            temp1->prev->next = temp;
+        }
+    }
+
 }
