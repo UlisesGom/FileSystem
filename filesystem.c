@@ -142,6 +142,7 @@ int BorrarDirectorio(char* targetDir)
         {            
             inode_t *currInode = &inodeList[tempDir->inode % 16][tempDir->inode / 16]; 
             currInode->type = TYPE_EMPTY;
+	    freeinode(tempDir->inode);
             tempDir->inode = 0;
             //freeblock(currInode->numero_bloque, (LISTABLOQUES *)tempDir);
             return 0;
@@ -318,6 +319,7 @@ int BorrarArchivo(char* fileName)
         {            
             inode_t *currInode = &inodeList[tempDir->inode % 16][tempDir->inode / 16]; 
             currInode->type = TYPE_EMPTY;
+	    freeinode(tempDir->inode);
             tempDir->inode = 0;
             //freeblock(currInode->numero_bloque, (LISTABLOQUES *)tempDir);
             return 0;
