@@ -1,4 +1,4 @@
-/***********************************************************************************
+   /***********************************************************************************
 file system: superbloque, bootblock, lista de inode, bloque de datos.
 Bloques de 1K
 Nuestro sistema tendra 1 GB de informacion.
@@ -30,7 +30,8 @@ typedef struct dir
 
 inode_t inodeList[16][4] = {{}};
 inode_t* currentDir = &inodeList[2][0]; // Root
-char owners[10];
+char owners[15] ={};
+int User_Hash = -1;
 
 /***************** Funciones ****************************************/
 void InfoDirectorio(void);
@@ -103,7 +104,7 @@ void CrearDirectorio(char* dirName)
     dir_t *dirBLock = (dir_t*)itemLBL->direccion_bloque;
     inode_t* newInode = &inodeList[itemLIL->numeroInodo][itemLIL->numeroBloque];
     dir_t *currentDirBlock = currentDir->contentTable[0];
-    
+
     /* Initialize new Inode */
     newInode->contentTable[0] = dirBLock;
     newInode->type = TYPE_DIR;
@@ -134,13 +135,13 @@ void CrearDirectorio(char* dirName)
 
 int BorrarDirectorio(char* targetDir)
 {
-	dir_t *tempDir = currentDir->contentTable[0];    
+	dir_t *tempDir = currentDir->contentTable[0];
 
     for (int i = 0; i < 64; i++)
     {
         if(strcmp(targetDir, tempDir->name) == 0)
-        {            
-            inode_t *currInode = &inodeList[tempDir->inode % 16][tempDir->inode / 16]; 
+        {
+            inode_t *currInode = &inodeList[tempDir->inode % 16][tempDir->inode / 16];
             currInode->type = TYPE_EMPTY;
 	    freeinode(tempDir->inode);
             tempDir->inode = 0;
@@ -178,45 +179,45 @@ int CambiarDirectorio(char* targetDir)
 
 int EditarArchivo(char* targetDir, char* content)
 {
-	dir_t *tempDir = currentDir->contentTable[0]; 
+	dir_t *tempDir = currentDir->contentTable[0];
     int bytesNeeded = strlen(content);
-    int blocksUsed = 0;     
+    int blocksUsed = 0;
 
     for (int i = 0; i < 64; i++)
     {
         if(strcmp(targetDir, tempDir->name) == 0)
-        {            
-            inode_t *currInode = &inodeList[tempDir->inode % 16][tempDir->inode / 16]; 
-            currInode->size = bytesNeeded; 
+        {
+            inode_t *currInode = &inodeList[tempDir->inode % 16][tempDir->inode / 16];
+            currInode->size = bytesNeeded;
 
             printf("Storing %d bytes in %s\n", bytesNeeded, targetDir);
 
-            /* Copia el contenido a los bloques */ 
+            /* Copia el contenido a los bloques */
             while(bytesNeeded > 0)
-            {      
-                /* Obtener un nuevo bloque para el contenido */             
-                BLOCKITEM* newBlock = dequeue_block();                
+            {
+                /* Obtener un nuevo bloque para el contenido */
+                BLOCKITEM* newBlock = dequeue_block();
                 currInode->contentTable[blocksUsed] = newBlock->direccion_bloque;
 
-                printf("Storing block %d...\n", blocksUsed); 
+                printf("Storing block %d...\n", blocksUsed);
 
-                /* Usar mas de un bloque cuando el contenido sea mas grande que el bloque mismo */ 
+                /* Usar mas de un bloque cuando el contenido sea mas grande que el bloque mismo */
                 if (bytesNeeded > BLOCK_SIZE)
-                {                                    
-                    memcpy(currInode->contentTable[blocksUsed], content, BLOCK_SIZE);                                       
-                    content += BLOCK_SIZE; // Apuntar al siguiente fragmento del contenido                    
+                {
+                    memcpy(currInode->contentTable[blocksUsed], content, BLOCK_SIZE);
+                    content += BLOCK_SIZE; // Apuntar al siguiente fragmento del contenido
                     bytesNeeded -= BLOCK_SIZE;  // Restar el numero de bytes copiados
                     blocksUsed++; // Ir al siguiente bloque
                 }
                 else
                 {
                 	memcpy(currInode->contentTable[blocksUsed], content, bytesNeeded);
-                    bytesNeeded = 0;                    
-                }                
+                    bytesNeeded = 0;
+                }
             }
             #ifndef TEST_MODE
-				Write2Cliente("Se escribió correctamente");   
-			#endif  
+				Write2Cliente("Se escribió correctamente");
+			#endif
             return 0;
         }
         else
@@ -232,42 +233,42 @@ int EditarArchivo(char* targetDir, char* content)
 
 int AbrirArchivo(char* targetDir)
 {
-	dir_t *tempDir = currentDir->contentTable[0]; 
-    int blocksOpened = 0;  
-    char *bufferSalida;     
+	dir_t *tempDir = currentDir->contentTable[0];
+    int blocksOpened = 0;
+    char *bufferSalida;
 
     for (int i = 0; i < 64; i++)
     {
         if(strcmp(targetDir, tempDir->name) == 0)
-        {            
-            inode_t *currInode = &inodeList[tempDir->inode % 16][tempDir->inode / 16]; 
-            int remainingBytes = currInode->size;  
+        {
+            inode_t *currInode = &inodeList[tempDir->inode % 16][tempDir->inode / 16];
+            int remainingBytes = currInode->size;
 
-            /* Imprime el contenido de los bloques */ 
+            /* Imprime el contenido de los bloques */
             while(remainingBytes > 0)
-            {  
-                /* Imprime todos los bloques usados para guardar el contenido */ 
-                if(remainingBytes >= BLOCK_SIZE) 
+            {
+                /* Imprime todos los bloques usados para guardar el contenido */
+                if(remainingBytes >= BLOCK_SIZE)
                 {
 	                #ifdef TEST_MODE
 	                    printf("%.*s", (int)BLOCK_SIZE, (char *)currInode->contentTable[blocksOpened]);
 
 	                #else
-	           			Write2Cliente((char *)currInode->contentTable[blocksOpened]); 
+	           			Write2Cliente((char *)currInode->contentTable[blocksOpened]);
 	           		#endif
 	                remainingBytes -= BLOCK_SIZE;
-                }                                            
+                }
                 else
                 {
                 	#ifdef TEST_MODE
                     	printf("%.*s", remainingBytes, (char *)currInode->contentTable[blocksOpened]);
-                    	 
+
                     #else
-                    	Write2Cliente((char *)currInode->contentTable[blocksOpened]); 
+                    	Write2Cliente((char *)currInode->contentTable[blocksOpened]);
            			#endif
            			remainingBytes = 0;
                 }
-                blocksOpened++; // Avanza al siguiente bloque                                        
+                blocksOpened++; // Avanza al siguiente bloque
             }
             //Write2Cliente("$");
             return 0;
@@ -285,13 +286,13 @@ int AbrirArchivo(char* targetDir)
 int CrearArchivo(char* fileName)
 {
       /* Get a free inode from the LIL and get free block*/
-    LISTITEM* itemLIL = dequeue();    
+    LISTITEM* itemLIL = dequeue();
     inode_t* newInode = &inodeList[itemLIL->numeroInodo][itemLIL->numeroBloque];
     dir_t *currentDirBlock = currentDir->contentTable[0];
 
-	/* Initialize new Inode */    
-    newInode->type = TYPE_FILE;  
-    newInode->size = 0;  
+	/* Initialize new Inode */
+    newInode->type = TYPE_FILE;
+    newInode->size = 0;
 
 	 /* Search for an available space in the current directory */
     for (int i = 0; i < 64; i++)
@@ -311,13 +312,13 @@ int CrearArchivo(char* fileName)
 
 int BorrarArchivo(char* fileName)
 {
-    dir_t *tempDir = currentDir->contentTable[0];    
+    dir_t *tempDir = currentDir->contentTable[0];
 
     for (int i = 0; i < 64; i++)
     {
         if(strcmp(fileName, tempDir->name) == 0)
-        {            
-            inode_t *currInode = &inodeList[tempDir->inode % 16][tempDir->inode / 16]; 
+        {
+            inode_t *currInode = &inodeList[tempDir->inode % 16][tempDir->inode / 16];
             currInode->type = TYPE_EMPTY;
 	    freeinode(tempDir->inode);
             tempDir->inode = 0;
@@ -352,26 +353,70 @@ void ProcesarComando(char* buffer){
 		CambiarDirectorio(parametro);
 	}
 	else if(strcmp(comando, "cat") == 0){
-		CrearArchivo(parametro);		
+		CrearArchivo(parametro);
 	}
 	else if(strcmp(comando, "del") == 0){
-		BorrarArchivo(parametro);		
+		BorrarArchivo(parametro);
 	}
 	else if(strcmp(comando, "edit") == 0){
 		EditarArchivo(parametro, texto);
 	}
 	else if(strcmp(comando, "open") == 0){
-		AbrirArchivo(parametro);		
+		AbrirArchivo(parametro);
 	}
 }
 
+int Owner_Hash(void){
+    static int Hash_Func = 0;
+    static char Tabla_Hash[10][15];
+    int Codigo_Hash = 0;
+
+    if(Hash_Func == 0){
+        for(int i=0; i<10; i++){
+                for(int j=0; j<15;j++){
+                        Tabla_Hash[i][j] = 0;
+                }
+        }
+        Hash_Func++;
+
+
+    }
+
+    if(owners[0] != 0){
+        for(int i = 0; i<Hash_Func;i++){
+            if((strcmp(Tabla_Hash[i], owners))==0){
+                Codigo_Hash = i;
+          
+                break;
+            }
+            else if(((Hash_Func-1)==i) &&(Hash_Func < 11)){
+
+                strcpy(Tabla_Hash[Hash_Func-1],owners);
+                Codigo_Hash = Hash_Func-1;
+                Hash_Func++;
+
+                break;
+            }
+            else if((Hash_Func-1)==i){
+                Codigo_Hash = -1;
+            }
+            else{
+                //idle condition
+            }
+        }
+
+    }
+
+    return Codigo_Hash;
+
+}
 
 
 int main(void)
 {
 
     char boot[1024];
-    int LBL[256];
+    //int LBL[256];
     dir_t root[64] = {{2, "."}, {2, ".."}};
     char buffer[50] = "", buffer2[15];
     int fd;
@@ -395,11 +440,13 @@ int main(void)
 
     /* Inicializa el FIFO */
     mkfifo("Send2Fifo", 0666);
-    
+
     fd = open("Send2Fifo", O_RDONLY);
     read(fd,buffer2, 15);
 	close(fd);
 	strcpy(owners, buffer2);
+	
+	User_Hash = Owner_Hash(); // este valor de la variable owner
 
 	while(1)
 	{
