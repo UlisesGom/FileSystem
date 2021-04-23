@@ -8,8 +8,8 @@
 
 
 /* Declaración de funciones */
-void InfoDirectory(void);  
-void CreateDirectory(void); 
+void InfoDirectory(void);
+void CreateDirectory(void);
 void DeleteDirectory(void);
 void ChangeDirectory(void);
 void CreateFile(void);
@@ -127,7 +127,7 @@ void EditFile(){
 	fgets_(arr);
 	printf("Escribe el texto que quieres agregar \n");
 	fgets_(texto);
-	
+
 	strcat(arr2send, " ");
 	strcat(arr2send, arr);
 	strcat(arr2send, " ");
@@ -166,7 +166,7 @@ void OpenFile(){
 	char read_arr[50]="";
 	//int x=1;
 	int fdw;
-	
+
 
 	printf("Escribe el nombre del archivo que quieres abrir \n");
 	fgets_(arr);
@@ -185,17 +185,21 @@ void OpenFile(){
 		x = read_fifo();
 	}while(x);*/
 
-	
+
 }
 
 
 void main(void)
 {
 	int opciones;
-	char c, wait[5], read_arr[15];
+	char c, wait[5];
+	char f_arr[20];
+	char f_arr2send[50] = "user";
 	printf("Bienvenido, por favor ingresa tu nombre de usuario\n");
-	fgets_(read_arr);
-	Write2FileSystem(read_arr);
+	fgets_(f_arr);
+	strcat(f_arr2send, " ");
+	strcat(f_arr2send, f_arr);
+	Write2FileSystem(f_arr2send);
 
 
 	while(1)
