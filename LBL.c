@@ -29,18 +29,18 @@ BLOCKITEM* dequeue_block()
 {
     BLOCKITEM * temp = head_block.first;
     BLOCKITEM * temp_1 = temp->next;
-    
+
     // Este bloque es el como el remember inode
     if(temp_1 == (BLOCKITEM*)&head_block)
-    { 
+    {
             LBL_Refill(temp);
             head_block.first = temp->next;
-            head_block.last->prev = (BLOCKITEM*)&head_block;
+            //head_block.last->prev = (BLOCKITEM*)&head_block;
     }
     else
     {
         head_block.first = temp->next;
-        head_block.last->prev = (BLOCKITEM*)&head_block;
+        //head_block.last->prev = (BLOCKITEM*)&head_block;
     }
 
     return temp;
@@ -55,7 +55,7 @@ void LlenarLBL(void){
     head_block.last = (BLOCKITEM*) &head_block;
 
     for(int i = 9; i < 265; i++)
-    { 
+    {
         LBL = (BLOCKITEM *) malloc(sizeof(BLOCKITEM));
         LBL->numeroBloque = i;
         LBL->direccion_bloque = malloc(BLOCK_SIZE); // Aqui se crean los primeros bloques en la memoria que no estan utilizados por el SO.
@@ -82,6 +82,7 @@ void Bloques_ligados(LISTABLOQUES *Ultimo){// aqui asignamos los bloques que no 
     temp = Ultimo;
     temp->numeroBloque = 264;
     temp->next = listhead;
+    listhead = temp;
 
 }
 
@@ -98,7 +99,7 @@ void LBL_Refill(BLOCKITEM *Ultimo)
        listhead = temp;
        Ultimo = (BLOCKITEM *) malloc(sizeof(BLOCKITEM));
        Ultimo->numeroBloque = temp->numeroBloque;
-       Ultimo->direccion_bloque = (int*) temp->next;
+       Ultimo->direccion_bloque = (int*) temp;
        enqueue_block(Ultimo);
        cuenta++;
     }
@@ -109,9 +110,8 @@ void freeblock(int numero_bloque, LISTABLOQUES* direccion){
 
     LISTABLOQUES* temp;
     temp = (LISTABLOQUES *)head_block.last->direccion_bloque;
-    
+
     direccion->numeroBloque = numero_bloque;
     direccion->next = listhead;
     temp->next = direccion;
-    listhead = temp;
 }
