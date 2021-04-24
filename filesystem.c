@@ -15,6 +15,8 @@ Nuestro sistema tendra 1 GB de informacion.
 #include <unistd.h>
 #include <fcntl.h>
 #include "LBL.h"
+#include <sys/types.h>
+#include <sys/stat.h>
 
 
 /************** Tipos y Constantes **********************************/
@@ -131,9 +133,12 @@ void InfoDirectorio()
             strcat(bufferSalida, dirBLock->name);
             strcat(bufferSalida, "\n");
             #endif
-
         }
-    dirBLock++;
+        else
+        {
+            break;
+        }
+        dirBLock++;
 
     }
     #ifndef TEST_MODE
@@ -157,6 +162,7 @@ void CrearDirectorio(char* dirName)
     newInode->owner = User_Hash;
 
     /* Initialize current and top directory */
+    memset(dirBLock, 0, BLOCK_SIZE); // Clean memory space for the directory
     strcpy(&dirBLock->name[0], ".");
     dirBLock->inode = itemLIL->numeroInodo + (itemLIL->numeroBloque * 16);
     dirBLock++;
@@ -181,16 +187,14 @@ void CrearDirectorio(char* dirName)
 
 int BorrarDirectorio(char* targetDir)
 {
-	dir_t *tempDir = currentDir->contentTable[0];
-
-
+	dir_t *tempDir = currentDir->contentTable[0];    
 
     for (int i = 0; i < 64; i++)
     {
         if(strcmp(targetDir, tempDir->name) == 0)
         {
             inode_t *currInode = &inodeList[tempDir->inode % 16][tempDir->inode / 16];
-            if(currInode ->owner == User_Hash){ // verifica que tenga permisos
+            if((currInode ->owner == User_Hash) && (currInode->type == TYPE_DIR)){ // verifica que tenga permisos
                 currInode->type = TYPE_EMPTY;
                 freeinode(tempDir->inode);
                 tempDir->inode = 0;
@@ -359,7 +363,6 @@ int CrearArchivo(char* fileName)
     newInode->type = TYPE_FILE;
     newInode->owner = User_Hash;
     newInode->size = 0;
-
 	 /* Search for an available space in the current directory */
     for (int i = 0; i < 64; i++)
     {
@@ -385,7 +388,7 @@ int BorrarArchivo(char* fileName)
         if(strcmp(fileName, tempDir->name) == 0)
         {
             inode_t *currInode = &inodeList[tempDir->inode % 16][tempDir->inode / 16];
-            if(currInode->owner == User_Hash){
+            if((currInode->owner == User_Hash) && (currInode->type == TYPE_FILE)){
                 currInode->type = TYPE_EMPTY;
                 freeinode(tempDir->inode);
                 tempDir->inode = 0;
