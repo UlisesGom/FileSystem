@@ -187,7 +187,7 @@ void CrearDirectorio(char* dirName)
 
 int BorrarDirectorio(char* targetDir)
 {
-	dir_t *tempDir = currentDir->contentTable[0];    
+	dir_t *tempDir = currentDir->contentTable[0];
 
     for (int i = 0; i < 64; i++)
     {
@@ -198,7 +198,7 @@ int BorrarDirectorio(char* targetDir)
                 currInode->type = TYPE_EMPTY;
                 freeinode(tempDir->inode);
                 tempDir->inode = 0;
-                //freeblock(currInode->numero_bloque, (LISTABLOQUES *)tempDir);
+                freeblock(currInode->numero_bloque, (LISTABLOQUES *)currInode->contentTable[0]);
                 return 0;
             }
             else{
@@ -392,7 +392,7 @@ int BorrarArchivo(char* fileName)
                 currInode->type = TYPE_EMPTY;
                 freeinode(tempDir->inode);
                 tempDir->inode = 0;
-                //freeblock(currInode->numero_bloque, (LISTABLOQUES *)tempDir);
+                freeblock(currInode->numero_bloque, (LISTABLOQUES *)currInode->contentTable[0]);
                 return 0;
             }
             else{
