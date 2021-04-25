@@ -2,7 +2,7 @@
 #define LBL_H_INCLUDED
 
 /****** Constantes y tipos de dato ******/
-#define BLOCK_SIZE (sizeof(int) * 64)
+#define BLOCK_SIZE (sizeof(int) * 256)
 
 typedef struct blockitem {
     struct blockitem *next;

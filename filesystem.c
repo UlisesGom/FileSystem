@@ -134,10 +134,6 @@ void InfoDirectorio()
             strcat(bufferSalida, "\n");
             #endif
         }
-        else
-        {
-            break;
-        }
         dirBLock++;
 
     }
@@ -419,6 +415,12 @@ void ProcesarComando(char* buffer){
     comando = strtok(buffer, " ");
     parametro = strtok(NULL, " ");
     texto = strtok(NULL, "*");
+
+    if (parametro != NULL)
+    {
+        int len = strlen(parametro);
+        if( parametro[len-1] == '\n') parametro[len-1] = 0;
+    }
 
 	if(strcmp(comando, "ls") == 0){
 		InfoDirectorio();

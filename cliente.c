@@ -252,6 +252,7 @@ void main(void)
 		}
 		printf("\n\n Presiona Enter para continuar \n\n");
 		fgets_(wait);
+		system("clear");
 
 	}
 }
