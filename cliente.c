@@ -66,7 +66,8 @@ void CreateDirectory(){
 }
 
 void DeleteDirectory(){
-
+	int fdw;
+	char arr_receive[50];
 	char arr[20];
 	char arr2send[50] = "rm";
 
@@ -74,12 +75,17 @@ void DeleteDirectory(){
 	fgets_(arr);
 	strcat(arr2send, " ");
 	strcat(arr2send, arr);
-
 	Write2FileSystem(arr2send);
+
+	fdw = open("Send2Fifo", O_RDONLY);
+	read(fdw, arr_receive, sizeof(arr_receive));
+	close(fdw);
+	printf("%s",arr_receive);
 }
 
 void ChangeDirectory(){
-
+	int fdw;
+	char arr_receive[50];
 	char arr[20];
 	char arr2send[50] = "cd";
 
@@ -87,8 +93,12 @@ void ChangeDirectory(){
 	fgets_(arr);
 	strcat(arr2send, " ");
 	strcat(arr2send, arr);
-
 	Write2FileSystem(arr2send);
+
+	fdw = open("Send2Fifo", O_RDONLY);
+	read(fdw, arr_receive, sizeof(arr_receive));
+	close(fdw);
+	printf("%s",arr_receive);
 }
 
 void CreateFile(){
@@ -105,7 +115,8 @@ void CreateFile(){
 }
 
 void DeleteFile(){
-
+	int fdw;
+	char arr_receive[50];
 	char arr[20];
 	char arr2send[50] = "del";
 
@@ -113,12 +124,16 @@ void DeleteFile(){
 	fgets_(arr);
 	strcat(arr2send, " ");
 	strcat(arr2send, arr);
-
 	Write2FileSystem(arr2send);
+
+	fdw = open("Send2Fifo", O_RDONLY);
+	read(fdw, arr_receive, sizeof(arr_receive));
+	close(fdw);
+	printf("%s",arr_receive);
 }
 
 void EditFile(){
-
+	char arr_receive[50];
 	char arr[10], texto[40], read_arr[50];
 	int opcion, fdw;
 	char arr2send[50] = "edit";
@@ -139,40 +154,24 @@ void EditFile(){
 	read(fdw, read_arr, sizeof(read_arr));
 	close(fdw);
 	printf("\n\n%s\n", read_arr);
-}
-
-/*int read_fifo(){
-	char read_arr[50] = "";
-	int fdw;
 
 	fdw = open("Send2Fifo", O_RDONLY);
-	read(fdw, read_arr, sizeof(read_arr));
+	read(fdw, arr_receive, sizeof(arr_receive));
 	close(fdw);
-	printf("%s\n", read_arr);
-	if(strcmp(read_arr, "$") == 0)
-	{
-		return 0;
-	}
-	else
-	{
-		return 1;
-	}
-}*/
+	printf("%s",arr_receive);
+}
 
 void OpenFile(){
-
+	int fdw;
+	char arr_receive[50];
 	char arr[20];
 	char arr2send[50] = "open";
 	char read_arr[50]="";
-	//int x=1;
-	int fdw;
-
 
 	printf("Escribe el nombre del archivo que quieres abrir \n");
 	fgets_(arr);
 	strcat(arr2send, " ");
 	strcat(arr2send, arr);
-
 	Write2FileSystem(arr2send);
 
 	fdw = open("Send2Fifo", O_RDONLY);
@@ -180,11 +179,10 @@ void OpenFile(){
 	close(fdw);
 	printf("\n%s\n", read_arr);
 
-	/*do
-	{
-		x = read_fifo();
-	}while(x);*/
-
+	fdw = open("Send2Fifo", O_RDONLY);
+	read(fdw, arr_receive, sizeof(arr_receive));
+	close(fdw);
+	printf("%s",arr_receive);
 
 }
 

@@ -89,10 +89,11 @@ int Owner_Hash(void){
     return Codigo_Hash;
 
 }
-
+/* Esta función nos permite convertir enteros a arrays para poder
+mandarlos a través de la FIFO */
 char *my_itoa_buf(char *buf, size_t len, int num)
 {
-  static char loc_buf[sizeof(int) * 8]; /* not thread safe */
+  static char loc_buf[sizeof(int) * 8]; 
 
   if (!buf)
   {
@@ -101,7 +102,7 @@ char *my_itoa_buf(char *buf, size_t len, int num)
   }
 
   if (snprintf(buf, len, "%d", num) == -1)
-    return ""; /* or whatever */
+    return ""; 
 
   return buf;
 }
@@ -197,8 +198,9 @@ int BorrarDirectorio(char* targetDir)
                 freeblock(currInode->numero_bloque, (LISTABLOQUES *)currInode->contentTable[0]);
                 return 0;
             }
-            else{
-                return -1;
+            else
+            {
+                return 1; // Error code "Sin permisos"
             }
         }
         else
@@ -206,8 +208,7 @@ int BorrarDirectorio(char* targetDir)
             tempDir++;
         }
     }
-
-    return -1;
+    return 2; //Error Code "No existe el directorio"
 }
 
 int CambiarDirectorio(char* targetDir)
@@ -227,7 +228,7 @@ int CambiarDirectorio(char* targetDir)
         }
     }
 
-    return -1;
+    return 2; //Error Code "No existe el directorio"
 }
 
 int EditarArchivo(char* targetDir, char* content)
@@ -270,14 +271,11 @@ int EditarArchivo(char* targetDir, char* content)
                         bytesNeeded = 0;
                     }
                 }
-
-                #ifndef TEST_MODE
-                    Write2Cliente("Se escribió correctamente");
-                #endif
                 return 0;
             }
-            else{
-                return -1;
+            else
+            {
+                return 1; // Error code "Sin permisos"
             }
         }
         else
@@ -285,10 +283,7 @@ int EditarArchivo(char* targetDir, char* content)
             tempDir++;
         }
     }
-    #ifndef TEST_MODE
-    	Write2Cliente("No se escribió, puede que el archivo no exista");
-    #endif
-    return -1;
+    return 3; //Error Code "No existe el archivo"
 }
 
 int AbrirArchivo(char* targetDir)
@@ -331,11 +326,11 @@ int AbrirArchivo(char* targetDir)
                     }
                     blocksOpened++; // Avanza al siguiente bloque
                 }
-                //Write2Cliente("$");
                 return 0;
             }
-            else{
-                return -1;
+            else
+            {
+                return 1; // Error code "Sin permisos"
             }
         }
         else
@@ -343,8 +338,7 @@ int AbrirArchivo(char* targetDir)
             tempDir++;
         }
     }
-
-    return -1;
+    return 3; //Error Code "No existe el archivo"
 }
 
 
@@ -391,8 +385,9 @@ int BorrarArchivo(char* fileName)
                 freeblock(currInode->numero_bloque, (LISTABLOQUES *)currInode->contentTable[0]);
                 return 0;
             }
-            else{
-                return -1;
+            else
+            {
+                return 1; // Error code "Sin permisos"
             }
         }
         else
@@ -400,6 +395,7 @@ int BorrarArchivo(char* fileName)
             tempDir++;
         }
     }
+    return 3; //Error Code "No existe el archivo"
 }
 
 int CambiarUser(char* Usuario)
@@ -408,9 +404,33 @@ int CambiarUser(char* Usuario)
     User_Hash = Owner_Hash();
 }
 
+void ErrorCode(int code)
+{
+	switch(code)
+	{
+		case 0:
+			Write2Cliente("Comando Exitoso");
+		case 1:
+			Write2Cliente("Error: No tienes los permisos adecuados");
+			break;
+		case 2:
+			Write2Cliente("Error: No existe el directorio");
+			break;
+		case 3:
+			Write2Cliente("Error: No existe el archivo");
+			break;
+		default:
+			// do nothing
+		break;
+
+	}
+
+}
+
 void ProcesarComando(char* buffer){
 
     char *comando, *parametro, *texto;
+    int ret;
 
     comando = strtok(buffer, " ");
     parametro = strtok(NULL, " ");
@@ -422,6 +442,8 @@ void ProcesarComando(char* buffer){
         if( parametro[len-1] == '\n') parametro[len-1] = 0;
     }
 
+    ret = 5; /*Valor default para no regresar nada al cliente */
+
 	if(strcmp(comando, "ls") == 0){
 		InfoDirectorio();
 	}
@@ -429,27 +451,30 @@ void ProcesarComando(char* buffer){
 		CrearDirectorio(parametro);
 	}
 	else if(strcmp(comando, "rm") == 0){
-		BorrarDirectorio(parametro);
+		ret = BorrarDirectorio(parametro);
 	}
 	else if(strcmp(comando, "cd") == 0){
-		CambiarDirectorio(parametro);
+		ret = CambiarDirectorio(parametro);
 	}
 	else if(strcmp(comando, "cat") == 0){
 		CrearArchivo(parametro);
 	}
 	else if(strcmp(comando, "del") == 0){
-		BorrarArchivo(parametro);
+		ret = BorrarArchivo(parametro);
 	}
 	else if(strcmp(comando, "edit") == 0){
-		EditarArchivo(parametro, texto);
+		ret = EditarArchivo(parametro, texto);
 	}
 	else if(strcmp(comando, "open") == 0){
-		AbrirArchivo(parametro);
+		ret = AbrirArchivo(parametro);
 	}
 	else if(strcmp(comando, "user") == 0){
 		CambiarUser(parametro);
 	}
 
+	#ifndef TEST_MODE
+		ErrorCode(ret);
+	#endif
 }
 
 
