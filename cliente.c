@@ -4,12 +4,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include "commonTypes.h"
 
 
 /* Declaración de funciones */
-void InfoDirectory(void);
-void CreateDirectory(void);
+void InfoDirectory(void);  
+void CreateDirectory(void); 
 void DeleteDirectory(void);
 void ChangeDirectory(void);
 void CreateFile(void);
@@ -43,164 +42,73 @@ void Write2FileSystem(char* Data){
 void InfoDirectory(){
 
 	int fdw;
-	char arr[50];
+	char arr1[50];
 
-	Write2FileSystem("ls");
+	printf("InfoDIrectory\n");
+	Write2FileSystem("InfoDirectory");
+
 	fdw = open("Send2Fifo", O_RDONLY);
-	read(fdw, arr, sizeof(arr));
+	read(fdw, arr1, sizeof(arr1));
 	close(fdw);
-	printf("----------Directorios-------------\n");
-	printf("%s\n", arr);
+	printf("Aquí debería regresar la información del directorio\n ");
+	printf("%s\n", arr1);
 }
 
 void CreateDirectory(){
-	char arr[20];
-	char arr2send[50] = "mkdir";
+	int fdw;
 
-	printf("Escribe el nombre del nuevo directorio \n");
-	fgets_(arr);
-	strcat(arr2send, " ");
-	strcat(arr2send, arr);
-
-	Write2FileSystem(arr2send);
+	printf("CreateDirectory");
+	Write2FileSystem("CreateDirectorye");
 }
 
 void DeleteDirectory(){
+	int fdw;
 
-	char arr[20];
-	char arr2send[50] = "rm";
-
-	printf("Escribe el nombre del directorio a eliminar \n");
-	fgets_(arr);
-	strcat(arr2send, " ");
-	strcat(arr2send, arr);
-
-	Write2FileSystem(arr2send);
+	printf("DeleteDirectory");
+	Write2FileSystem("DeleteDirectory");
 }
 
 void ChangeDirectory(){
+	int fdw;
 
-	char arr[20];
-	char arr2send[50] = "cd";
-
-	printf("Escribe a que directorio quieres ir \n");
-	fgets_(arr);
-	strcat(arr2send, " ");
-	strcat(arr2send, arr);
-
-	Write2FileSystem(arr2send);
+	printf("ChangeDirectory");
+	Write2FileSystem("ChangeDirectory");
 }
 
 void CreateFile(){
+	int fdw;
 
-	char arr[20];
-	char arr2send[50] = "cat";
-
-	printf("Escribe el nombre del archivo que quieres crear \n");
-	fgets_(arr);
-	strcat(arr2send, " ");
-	strcat(arr2send, arr);
-
-	Write2FileSystem(arr2send);
+	printf("CreateFile");
+	Write2FileSystem("CreateFile");
 }
 
 void DeleteFile(){
+	int fdw;
 
-	char arr[20];
-	char arr2send[50] = "del";
-
-	printf("Escribe el nombre del archivo que quieres eliminar \n");
-	fgets_(arr);
-	strcat(arr2send, " ");
-	strcat(arr2send, arr);
-
-	Write2FileSystem(arr2send);
+	printf("DeleteFile");
+	Write2FileSystem("DeleteFile");
 }
 
 void EditFile(){
+	int fdw;
 
-	char arr[10], texto[40], read_arr[50];
-	int opcion, fdw;
-	char arr2send[50] = "edit";
-
-	printf("Escribe el nombre del archivo que quieres editar \n");
-	fgets_(arr);
-	printf("Escribe el texto que quieres agregar \n");
-	fgets_(texto);
-
-	strcat(arr2send, " ");
-	strcat(arr2send, arr);
-	strcat(arr2send, " ");
-	strcat(arr2send, texto);
-	strcat(arr2send, "*");
-	Write2FileSystem(arr2send);
-
-	fdw = open("Send2Fifo", O_RDONLY);
-	read(fdw, read_arr, sizeof(read_arr));
-	close(fdw);
-	printf("\n\n%s\n", read_arr);
+	printf("EditFile");
+	Write2FileSystem("EditFile");
 }
 
-/*int read_fifo(){
-	char read_arr[50] = "";
-	int fdw;
-
-	fdw = open("Send2Fifo", O_RDONLY);
-	read(fdw, read_arr, sizeof(read_arr));
-	close(fdw);
-	printf("%s\n", read_arr);
-	if(strcmp(read_arr, "$") == 0)
-	{
-		return 0;
-	}
-	else
-	{
-		return 1;
-	}
-}*/
-
 void OpenFile(){
-
-	char arr[20];
-	char arr2send[50] = "open";
-	char read_arr[50]="";
-	//int x=1;
 	int fdw;
 
-
-	printf("Escribe el nombre del archivo que quieres abrir \n");
-	fgets_(arr);
-	strcat(arr2send, " ");
-	strcat(arr2send, arr);
-
-	Write2FileSystem(arr2send);
-
-	fdw = open("Send2Fifo", O_RDONLY);
-	read(fdw, read_arr, sizeof(read_arr));
-	close(fdw);
-	printf("\n%s\n", read_arr);
-
-	/*do
-	{
-		x = read_fifo();
-	}while(x);*/
-
-
+	printf("OpenFile");
+	Write2FileSystem("OpenFile");
 }
 
 
 void main(void)
 {
+	int fdw;
 	int opciones;
-	char c, wait[5];
-	char f_arr[20];
-	char f_arr2send[50] = "user";
-	printf("Bienvenido, por favor ingresa tu nombre de usuario\n");
-	fgets_(f_arr);
-	strcat(f_arr2send, " ");
-	strcat(f_arr2send, f_arr);
-	Write2FileSystem(f_arr2send);
-
+	char arr2[50] = "prueba";
 
 	while(1)
 	{
@@ -218,7 +126,6 @@ void main(void)
 		printf("7.- Abrir un archivo\n");
 
 		scanf("%d", &opciones);
-		while((c = getchar()) != '\n' && c != EOF);
 
 		switch(opciones)
 		{
@@ -250,10 +157,6 @@ void main(void)
 				printf("Escoge una opción valida");
 				break;
 		}
-		printf("\n\n Presiona Enter para continuar \n\n");
-		fgets_(wait);
-		system("clear");
-
 	}
 }
 
