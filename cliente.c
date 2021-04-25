@@ -151,11 +151,6 @@ void EditFile(){
 	Write2FileSystem(arr2send);
 
 	fdw = open("Send2Fifo", O_RDONLY);
-	read(fdw, read_arr, sizeof(read_arr));
-	close(fdw);
-	printf("\n\n%s\n", read_arr);
-
-	fdw = open("Send2Fifo", O_RDONLY);
 	read(fdw, arr_receive, sizeof(arr_receive));
 	close(fdw);
 	printf("%s",arr_receive);
@@ -178,11 +173,6 @@ void OpenFile(){
 	read(fdw, read_arr, sizeof(read_arr));
 	close(fdw);
 	printf("\n%s\n", read_arr);
-
-	fdw = open("Send2Fifo", O_RDONLY);
-	read(fdw, arr_receive, sizeof(arr_receive));
-	close(fdw);
-	printf("%s",arr_receive);
 
 }
 

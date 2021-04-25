@@ -410,6 +410,7 @@ void ErrorCode(int code)
 	{
 		case 0:
 			Write2Cliente("Comando Exitoso");
+			break;
 		case 1:
 			Write2Cliente("Error: No tienes los permisos adecuados");
 			break;
