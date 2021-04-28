@@ -181,6 +181,9 @@ void main(void)
 {
 	int opciones;
 	char c, wait[5];
+	
+	/* El cliente lo primero que hace es preguntar el usuario que quiere usar el file system, por lo que le indica el servidor que debe guardar el nombre de usuario
+	para que el servidor le asigne los permisos*/
 	char f_arr[20];
 	char f_arr2send[50] = "user";
 	printf("Bienvenido, por favor ingresa tu nombre de usuario\n");
