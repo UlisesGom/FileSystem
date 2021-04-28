@@ -3,12 +3,14 @@
 #include "LIL.h"
 
 /********** Variables Globales ***********/
-
+// Esta variable global statica, nos indica el primer y ultimo elemento de la LIL.
 static LISTHDR head;
+// Esta variable global nos permite revisar la lista de inodos.
 extern inode_t inodeList[16][4];
 
 /*********** Funciones ******************/
 
+// Esta funcion nos permite encolar un inodo libre al final de la lista de inodos
 void enqueue(LISTITEM *item){
     LISTITEM *temp;
 
@@ -19,11 +21,12 @@ void enqueue(LISTITEM *item){
     temp->next = item;
 }
 
+// Esta funcion nos permite quitar el primer elemento de la LIL
 LISTITEM* dequeue(){
     LISTITEM * temp;
 
     temp = head.first;
-    if(temp == (LISTITEM*)&head)  // Este bloque es el remember inode
+    if(temp == (LISTITEM*)&head)  // Este bloque es el que busca inodos libres cuando la LIL se vacia
     {
         LlenarLIL(inodeList);
         temp = head.first;
@@ -41,6 +44,7 @@ LISTITEM* dequeue(){
     return temp;
 }
 
+// Esta funcion nos permite llenar la LIL tanto para incinicalizarla como para buscar inodos libre cuando la LIL se vacia.
 void LlenarLIL(inode_t inodeList[][4]){
 
 	int cuentaLIL = 0;
@@ -71,6 +75,7 @@ void LlenarLIL(inode_t inodeList[][4]){
 	}
 }
 
+// Esta funcion libera un inodo y lo concatena al inicio de la LIL, aqui se hace el remember inode
 void freeinode(int inodo){
     LISTITEM* temp;
     temp = (LISTITEM *) malloc(sizeof(LISTITEM)); 
@@ -79,22 +84,22 @@ void freeinode(int inodo){
     int contador =0;
     LISTITEM* temp1;
     temp1 = head.first;
-    while(temp1 != (LISTITEM*)&head){
+    while(temp1 != (LISTITEM*)&head){ // aqui verificamos cuantos elementos de la LIL tenemos
         contador++;
         temp1 = temp1->next;
     }
 
     
-    if(contador < 16){
+    if(contador < 16){ // Si la lista no esta llena, entonces solo concatena el inodo liberado como el primer elemento de la LIL.
         temp1 = head.first;
         head.first = temp;
         temp->next = temp1;
         temp->prev = (LISTITEM*)&head;
         temp1->prev = temp;
     }
-    else{
+    else{ // Si la lista esta llena entonces revisa el primer elemento de la lista
         temp1 = head.last;
-        if(inodo < (temp1->numeroInodo+ (temp1->numeroBloque*16))){ //Este es el remember inode
+        if(inodo < (temp1->numeroInodo+ (temp1->numeroBloque*16))){ //Este es el remember inode, si el primer elemento de la LIL es mayor que el inode liberado lo sustituye.
             head.last = temp;
             temp->next = temp1->next;
             temp->prev = temp1->prev;
