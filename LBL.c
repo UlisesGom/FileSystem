@@ -7,14 +7,16 @@
 
 /********** Variables Globales ***********/
 
+// Esta variable head_block indica el primer elemento de la lista y el ultimo elemento de la LBL
 static BLOCKHDR head_block;
+// Esta variable listhead indica solo el primer elemento de la lista de bloques libres que no estan en la LBL
 static LISTABLOQUES *listhead;
 
 /*********** Funciones ******************/
 void LBL_Refill(BLOCKITEM *Ultimo);
 void Bloques_ligados(LISTABLOQUES *Ultimo);
 
-
+//Esta funcion encola los elementos en la LBL
 void enqueue_block(BLOCKITEM *item){
     BLOCKITEM *temp;
 
@@ -25,6 +27,7 @@ void enqueue_block(BLOCKITEM *item){
     temp->next = item;
 }
 
+// Esta funcion quita el primer elemento de la LBL y regresa su dirección, para utilizar el bloque libre.
 BLOCKITEM* dequeue_block()
 {
     BLOCKITEM * temp = head_block.first;
@@ -46,6 +49,7 @@ BLOCKITEM* dequeue_block()
     return temp;
 }
 
+// Esta funcion se inicializa en el main y crea la LBL con sus 256 bloques libres solo la primera vez
 void LlenarLBL(void){
 
     BLOCKITEM *LBL;
@@ -54,7 +58,7 @@ void LlenarLBL(void){
     head_block.first = (BLOCKITEM*) &head_block;
     head_block.last = (BLOCKITEM*) &head_block;
 
-    for(int i = 9; i < 265; i++)
+    for(int i = 9; i < 265; i++) // se crea el primer bloque libre con ID 9 ya que los otros 8 ya estan siendo utilizados
     {
         LBL = (BLOCKITEM *) malloc(sizeof(BLOCKITEM));
         LBL->numeroBloque = i;
@@ -62,16 +66,16 @@ void LlenarLBL(void){
         enqueue_block(LBL);
     }
 
-    Bloques_ligados((LISTABLOQUES *)LBL->direccion_bloque);
+    Bloques_ligados((LISTABLOQUES *)LBL->direccion_bloque); // Una vez creada la LBL y los bloques libres que apunta, se solicita crear el resto de bloques libres.
 }
 
-void Bloques_ligados(LISTABLOQUES *Ultimo){// aqui asignamos los bloques que no tienen contenido y no estan en la LBL, por lo que cada bloque esta ligado al siguiente.
+void Bloques_ligados(LISTABLOQUES *Ultimo){// aqui creamos los bloques que no tienen contenido y no estan en la LBL, cada bloque esta ligado al siguiente.
 
     LISTABLOQUES *temp;
 
     listhead = NULL;
 
-    for(int i = 600; i > 264; i--)
+    for(int i = 600; i > 264; i--) // aqui se crean el resto de bloques y se ligan entre si, en total tenemos 600 bloques de un 1k.
     {
         temp = (LISTABLOQUES *)malloc(BLOCK_SIZE);
         temp->numeroBloque = i;
@@ -86,6 +90,8 @@ void Bloques_ligados(LISTABLOQUES *Ultimo){// aqui asignamos los bloques que no 
 
 }
 
+/* Esta funcion busca bloques libres, utilizando la direccion que tiene el ultimo bloque de la LBL, por lo que cada bloque libre que no esta en la LBL guarda
+ la direccion del siguiente. */
 void LBL_Refill(BLOCKITEM *Ultimo)
 {
     LISTABLOQUES *temp;
@@ -106,6 +112,7 @@ void LBL_Refill(BLOCKITEM *Ultimo)
 
 }
 
+/* Esta funcion concatena el bloque liberado como el primer bloque a utilizar cuando se terminen los bloques de la LBL, para su reciclado*/
 void freeblock(int numero_bloque, LISTABLOQUES* direccion){
 
     LISTABLOQUES* temp;
