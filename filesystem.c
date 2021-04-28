@@ -30,9 +30,13 @@ typedef struct dir
 
 /**************** Variables Globales ********************************/
 
+//aqui se define la lista de inodos
 inode_t inodeList[16][4] = {{}};
-inode_t* currentDir = &inodeList[2][0]; // Root
+// Se agrega el directorio raiz a la lista de inodos.
+inode_t* currentDir = &inodeList[2][0]; // Root agregado
+// Esta variable guarda el nombre del user actual
 char owners[15] ={};
+// Esta variable guarda el codigo Hash del user actual
 int User_Hash = -1;
 
 /***************** Funciones ****************************************/
@@ -45,12 +49,13 @@ int AbrirArchivo(char* targetDir);
 int BorrarArchivo(char* fileName);
 void ProcesarComando(char* buffer);
 
+// Esta funcion crea u codigo Hash por cada user y guarda la lista de los usuarios anteriores.
 int Owner_Hash(void){
     static int Hash_Func = 0;
     static char Tabla_Hash[10][15];
     int Codigo_Hash = 0;
 
-    if(Hash_Func == 0){
+    if(Hash_Func == 0){ // aqui se inicializa la lista hash
         for(int i=0; i<10; i++){
                 for(int j=0; j<15;j++){
                         Tabla_Hash[i][j] = 0;
@@ -60,15 +65,15 @@ int Owner_Hash(void){
 
 
     }
-
+// En esta parte se crea un codigo hash para cada User si es nuevo y crea una tabla hash para identificar el codigo con el usuario
     if(owners[0] != 0){
         for(int i = 0; i<Hash_Func;i++){
-            if((strcmp(Tabla_Hash[i], owners))==0){
-                Codigo_Hash = i;
+            if((strcmp(Tabla_Hash[i], owners))==0){ // aqui busca dentro de la tabla hash el user actual.
+                Codigo_Hash = i; // aqui regresa el codigo hash del usuario actual.
 
                 break;
             }
-            else if(((Hash_Func-1)==i) &&(Hash_Func < 11)){
+            else if(((Hash_Func-1)==i) &&(Hash_Func < 11)){ // si no encuentra el user en la tabla hash lo guarda y drea un codigo hash para el user.
 
                 strcpy(Tabla_Hash[Hash_Func-1],owners);
                 Codigo_Hash = Hash_Func-1;
@@ -76,11 +81,12 @@ int Owner_Hash(void){
 
                 break;
             }
-            else if((Hash_Func-1)==i){
+            else if((Hash_Func-1)==i){ // si la cantidad de usuarios es excedida manda un error.
                 Codigo_Hash = -1;
             }
-            else{
-                //idle condition
+            else{// Mientras esta buscando al user en la tabla hash entrara en esta condicion.
+		    
+                //idle condition.
             }
         }
 
@@ -146,17 +152,17 @@ void InfoDirectorio()
 void CrearDirectorio(char* dirName)
 {
     /* Get a free inode from the LIL and get free block*/
-    LISTITEM* itemLIL = dequeue();
-    BLOCKITEM* itemLBL = dequeue_block();
-    dir_t *dirBLock = (dir_t*)itemLBL->direccion_bloque;
-    inode_t* newInode = &inodeList[itemLIL->numeroInodo][itemLIL->numeroBloque];
-    dir_t *currentDirBlock = currentDir->contentTable[0];
+    LISTITEM* itemLIL = dequeue(); // obtnemos el primer elemento de la LIL y el inodo que debemos utilizar.
+    BLOCKITEM* itemLBL = dequeue_block(); // obtenemos el primer elemento de la LBL y el bloque de 1k que debemos utilizar.
+    dir_t *dirBLock = (dir_t*)itemLBL->direccion_bloque; //Aqui guardamos la direccion del bloque libre, para saber donde guardar la info del directorio.
+    inode_t* newInode = &inodeList[itemLIL->numeroInodo][itemLIL->numeroBloque]; //Aqui guardamos la direccion del inodo libre.
+    dir_t *currentDirBlock = currentDir->contentTable[0];//Aqui guardamos la direccion del bloque padre y la guardamos en el inodo actual.
 
     /* Initialize new Inode */
-    newInode->contentTable[0] = dirBLock;
-    newInode->type = TYPE_DIR;
-    newInode->numero_bloque = itemLBL->numeroBloque;
-    newInode->owner = User_Hash;
+    newInode->contentTable[0] = dirBLock; // Guardamos la direccion del bloque libre en el nuevo inodo.
+    newInode->type = TYPE_DIR; // Definimos el tipo como directorio.
+    newInode->numero_bloque = itemLBL->numeroBloque; // Guardamos el numero de bloque.
+    newInode->owner = User_Hash; //Guardamos el Codigo Hash del user que crea el directorio.
 
     /* Initialize current and top directory */
     memset(dirBLock, 0, BLOCK_SIZE); // Clean memory space for the directory
@@ -184,18 +190,18 @@ void CrearDirectorio(char* dirName)
 
 int BorrarDirectorio(char* targetDir)
 {
-	dir_t *tempDir = currentDir->contentTable[0];
+	dir_t *tempDir = currentDir->contentTable[0]; // buscamos en el bloque del directorio actual.
 
     for (int i = 0; i < 64; i++)
     {
         if(strcmp(targetDir, tempDir->name) == 0)
         {
             inode_t *currInode = &inodeList[tempDir->inode % 16][tempDir->inode / 16];
-            if((currInode ->owner == User_Hash) && (currInode->type == TYPE_DIR)){ // verifica que tenga permisos
-                currInode->type = TYPE_EMPTY;
-                freeinode(tempDir->inode);
-                tempDir->inode = 0;
-                freeblock(currInode->numero_bloque, (LISTABLOQUES *)currInode->contentTable[0]);
+            if((currInode ->owner == User_Hash) && (currInode->type == TYPE_DIR)){ // verifica que tenga permisos.
+                currInode->type = TYPE_EMPTY; // Cambia el tipo de inodo a vacio.
+                freeinode(tempDir->inode); // libera el inodo para que la LIL pueda utilizarlo.
+                tempDir->inode = 0; // Al directorio actual le pone 0 como inodo.
+                freeblock(currInode->numero_bloque, (LISTABLOQUES *)currInode->contentTable[0]); //Aqui libera el bloque y permite que la LBL lo pueda utilizar
                 return 0;
             }
             else
@@ -205,7 +211,7 @@ int BorrarDirectorio(char* targetDir)
         }
         else
         {
-            tempDir++;
+            tempDir++; // si no encuentra el nombre del directorio a buscar cambia al siguiente.
         }
     }
     return 2; //Error Code "No existe el directorio"
@@ -345,13 +351,13 @@ int AbrirArchivo(char* targetDir)
 int CrearArchivo(char* fileName)
 {
       /* Get a free inode from the LIL and get free block*/
-    LISTITEM* itemLIL = dequeue();
-    inode_t* newInode = &inodeList[itemLIL->numeroInodo][itemLIL->numeroBloque];
-    dir_t *currentDirBlock = currentDir->contentTable[0];
+    LISTITEM* itemLIL = dequeue(); // aqui solicita el primer inodo libre.
+    inode_t* newInode = &inodeList[itemLIL->numeroInodo][itemLIL->numeroBloque]; // aqui guarda la direccion del inodo libre.
+    dir_t *currentDirBlock = currentDir->contentTable[0]; // aqui guarda la direccion del directorio actual.
 
 	/* Initialize new Inode */
-    newInode->type = TYPE_FILE;
-    newInode->owner = User_Hash;
+    newInode->type = TYPE_FILE; // Aqui pone el tipo como Archivo.
+    newInode->owner = User_Hash; // Aqui guarda el codigo hash en la variable owner.
     newInode->size = 0;
 	 /* Search for an available space in the current directory */
     for (int i = 0; i < 64; i++)
@@ -398,7 +404,7 @@ int BorrarArchivo(char* fileName)
     return 3; //Error Code "No existe el archivo"
 }
 
-int CambiarUser(char* Usuario)
+int CambiarUser(char* Usuario) // cada que se conecta otro cliente se incia esta funcion
 {
     strcpy(owners, Usuario);
     User_Hash = Owner_Hash();
