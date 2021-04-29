@@ -113,7 +113,9 @@ char *my_itoa_buf(char *buf, size_t len, int num)
   return buf;
 }
 
-void Write2Cliente(char* Data){
+/* Esta función nos permite enviar strings a través de la FIFO */
+void Write2Cliente(char* Data)
+{
 	int fdw;
 
 	fdw = open("Send2Fifo", O_WRONLY);
@@ -525,15 +527,6 @@ int main(void)
 		close(fd);
 		ProcesarComando(buffer);
 	}
-
-    /*
-    int fd = open("pruebax", O_WRONLY || O_CREAT);
-    write(fd,boot, 1024);
-    write(fd, LBL, 1024);
-    write(fd,LIL, 1024);
-    write(fd, Lista_inode, 1024*4);
-    write(fd, raiz, 1024);
-    */
 
     return 0;
 }

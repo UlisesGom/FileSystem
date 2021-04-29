@@ -28,11 +28,9 @@ enum MenuOptions{
 	OpenF
 };
 
-		/*fds= open("Write2Client", O_RDONLY);
-		fdw = open("Send2Fifo", O_WRONLY);
-		write(fdw, arr2, strlen(arr2)+1);
-		close(fdw);*/
-void Write2FileSystem(char* Data){
+/* Esta función nos permite enviar strings a través de la FIFO*/
+void Write2FileSystem(char* Data)
+{
 	int fdw;
 
 	fdw = open("Send2Fifo", O_WRONLY);
@@ -40,7 +38,10 @@ void Write2FileSystem(char* Data){
 	close(fdw);
 }
 
-void InfoDirectory(){
+/* Envía el comando para acceder al menú de información
+Espera hasta recibir la respuesta del servidor con la información*/
+void InfoDirectory()
+{
 
 	int fdw;
 	char arr[50];
@@ -53,7 +54,10 @@ void InfoDirectory(){
 	printf("%s\n", arr);
 }
 
-void CreateDirectory(){
+/* Envía el comando de crear un nuevo directorio 
+Pregunta al usuario el nombre del nuevo directorio y lo envía al server*/
+void CreateDirectory()
+{
 	char arr[20];
 	char arr2send[50] = "mkdir";
 
@@ -65,7 +69,10 @@ void CreateDirectory(){
 	Write2FileSystem(arr2send);
 }
 
-void DeleteDirectory(){
+/* Envía el comando para borrar un nuevo directorio 
+Espera respusta de comando exitoso o mensaje de error*/
+void DeleteDirectory()
+{
 	int fdw;
 	char arr_receive[50];
 	char arr[20];
@@ -83,7 +90,10 @@ void DeleteDirectory(){
 	printf("%s",arr_receive);
 }
 
-void ChangeDirectory(){
+/* Envía el comando para cambiar de directorio 
+Espera respueta de comando exitoso o mensaje de error */
+void ChangeDirectory()
+{
 	int fdw;
 	char arr_receive[50];
 	char arr[20];
@@ -101,7 +111,10 @@ void ChangeDirectory(){
 	printf("%s",arr_receive);
 }
 
-void CreateFile(){
+/* Envía el comando de crear un nuevo Archivo 
+Pregunta al usuario el nombre del nuevo archivo y lo envía al server*/
+void CreateFile()
+{
 
 	char arr[20];
 	char arr2send[50] = "cat";
@@ -114,7 +127,10 @@ void CreateFile(){
 	Write2FileSystem(arr2send);
 }
 
-void DeleteFile(){
+/* Envía el comando para borrar un nuevo Archivo 
+Espera respusta de afirmación o mensaje de error*/
+void DeleteFile()
+{
 	int fdw;
 	char arr_receive[50];
 	char arr[20];
@@ -132,7 +148,12 @@ void DeleteFile(){
 	printf("%s",arr_receive);
 }
 
-void EditFile(){
+/* Envía el comando para Editar un nuevo Archivo 
+Pregunta al usuario el nombre de archivo a editar (concatena la respuesta)
+Pregunta al usuario el texto a enviar (concatena la respuesta) y envía al servidor
+Espera respusta de afirmación o mensaje de error*/
+void EditFile()
+{
 	char arr_receive[50];
 	char arr[10], texto[40], read_arr[50];
 	int opcion, fdw;
@@ -156,7 +177,9 @@ void EditFile(){
 	printf("%s",arr_receive);
 }
 
-void OpenFile(){
+/* Envía el comando para borrar un nuevo ARchivo 
+Espera respusta del servidor del texto que contenía el archivo */
+{
 	int fdw;
 	char arr_receive[50];
 	char arr[20];
@@ -176,7 +199,8 @@ void OpenFile(){
 
 }
 
-
+/*Este es el menú principal, aquí se despliega el menú con todas las opciones
+Así mismo limpia la pantalla después de cada opción  */
 void main(void)
 {
 	int opciones;
