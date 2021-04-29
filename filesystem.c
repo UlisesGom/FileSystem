@@ -123,12 +123,14 @@ void Write2Cliente(char* Data)
 	close(fdw);
 }
 
+/* Esta funcion despliega la lista de directorios en el directorio actual */
 void InfoDirectorio()
 {
     dir_t *dirBLock = (dir_t*)currentDir->contentTable[0];
     char bufferSalida[80] = "";
 
     printf("*************************************************\n");
+    /* Busca atraves de los 64 inodos aquellos inicializados correctamente */ 
     for (int i = 0; i < 64; i++)
     {
         if (dirBLock->inode != 0)
@@ -150,7 +152,7 @@ void InfoDirectorio()
     	Write2Cliente(bufferSalida);
     #endif
 }
-
+/* Funcion para crear un nuevo directorio dentro del directorio actual */ 
 void CrearDirectorio(char* dirName)
 {
     /* Get a free inode from the LIL and get free block*/
@@ -189,7 +191,7 @@ void CrearDirectorio(char* dirName)
         }
     }
 }
-
+/* Funcion para eliminar directorio dentro del directorio actual */ 
 int BorrarDirectorio(char* targetDir)
 {
 	dir_t *tempDir = currentDir->contentTable[0]; // buscamos en el bloque del directorio actual.
@@ -218,11 +220,11 @@ int BorrarDirectorio(char* targetDir)
     }
     return 2; //Error Code "No existe el directorio"
 }
-
+/* Funcion para cambiar a un directorio contenido por el directorio actual */ 
 int CambiarDirectorio(char* targetDir)
 {
     dir_t *tempDir = currentDir->contentTable[0];
-
+    /* Busca el nombre del directorio en los 64 inodos del directorio actual */ 
     for (int i = 0; i < 64; i++)
     {
         if(strcmp(targetDir, tempDir->name) == 0)
@@ -238,18 +240,20 @@ int CambiarDirectorio(char* targetDir)
 
     return 2; //Error Code "No existe el directorio"
 }
-
+/* Funcion para agregar contenido a un archivo, 
+   todo el contenido previo del archivo es remplazado con esta llamada */ 
 int EditarArchivo(char* targetDir, char* content)
 {
 	dir_t *tempDir = currentDir->contentTable[0];
     int bytesNeeded = strlen(content);
     int blocksUsed = 0;
-
+    /* Buscar el nombre del archivo a modificar */ 
     for (int i = 0; i < 64; i++)
     {
         if(strcmp(targetDir, tempDir->name) == 0)
         {
             inode_t *currInode = &inodeList[tempDir->inode % 16][tempDir->inode / 16];
+            /* Permite la edicion solamente si el usuario actual es el owner del archivo */
             if(currInode->owner == User_Hash)
             {
                 currInode->size = bytesNeeded;
@@ -274,7 +278,7 @@ int EditarArchivo(char* targetDir, char* content)
                         blocksUsed++; // Ir al siguiente bloque
                     }
                     else
-                    {
+                    {                        
                         memcpy(currInode->contentTable[blocksUsed], content, bytesNeeded);
                         bytesNeeded = 0;
                     }
@@ -293,18 +297,19 @@ int EditarArchivo(char* targetDir, char* content)
     }
     return 3; //Error Code "No existe el archivo"
 }
-
+/* Funcion para desplegar contenido del archivo */ 
 int AbrirArchivo(char* targetDir)
 {
 	dir_t *tempDir = currentDir->contentTable[0];
     int blocksOpened = 0;
     char *bufferSalida;
-
+    /* Buscar el inodo con el nombre del archivo */ 
     for (int i = 0; i < 64; i++)
     {
         if(strcmp(targetDir, tempDir->name) == 0)
         {
             inode_t *currInode = &inodeList[tempDir->inode % 16][tempDir->inode / 16];
+            /* Permite visualizar archivo solo si el usuario actual es el owner */ 
             if(currInode->owner == User_Hash){
                 int remainingBytes = currInode->size;
 
@@ -349,7 +354,7 @@ int AbrirArchivo(char* targetDir)
     return 3; //Error Code "No existe el archivo"
 }
 
-
+/* Funcion para crear archivo dentro del directorio actual */
 int CrearArchivo(char* fileName)
 {
       /* Get a free inode from the LIL and get free block*/
@@ -380,13 +385,16 @@ int CrearArchivo(char* fileName)
 int BorrarArchivo(char* fileName)
 {
     dir_t *tempDir = currentDir->contentTable[0];
-
+    /* Busca el inode con el nombre del archivo */ 
     for (int i = 0; i < 64; i++)
     {
         if(strcmp(fileName, tempDir->name) == 0)
         {
             inode_t *currInode = &inodeList[tempDir->inode % 16][tempDir->inode / 16];
-            if((currInode->owner == User_Hash) && (currInode->type == TYPE_FILE)){
+            /* Permite borrar solo si el usuario es el owner y el inodo corresponde al tipo ARCHIVO */ 
+            if((currInode->owner == User_Hash) && (currInode->type == TYPE_FILE))
+            {
+                /* Libera el inodo y el bloque de memoria */ 
                 currInode->type = TYPE_EMPTY;
                 freeinode(tempDir->inode);
                 tempDir->inode = 0;
@@ -411,7 +419,7 @@ int CambiarUser(char* Usuario) // cada que se conecta otro cliente se incia esta
     strcpy(owners, Usuario);
     User_Hash = Owner_Hash();
 }
-
+/* Funcion para interpretar codigo de error hacia el cliente */ 
 void ErrorCode(int code)
 {
 	switch(code)
@@ -435,7 +443,7 @@ void ErrorCode(int code)
 	}
 
 }
-
+/* Funcion para interpretar comandos del cliente y ejecutarlos */ 
 void ProcesarComando(char* buffer){
 
     char *comando, *parametro, *texto;
@@ -490,8 +498,7 @@ void ProcesarComando(char* buffer){
 int main(void)
 {
 
-    char boot[1024];
-    //int LBL[256];
+    char boot[1024];    
     dir_t root[64] = {{2, "."}, {2, ".."}};
     char buffer[50] = "", buffer2[15];
     int fd;
@@ -500,6 +507,7 @@ int main(void)
     inodeList[2][0].contentTable[0] = root;
     inodeList[2][0].type = TYPE_DIR;
 
+    /* Inicializa LIL y LBL */ 
     LlenarLIL(inodeList);
     LlenarLBL();
 
@@ -516,7 +524,7 @@ int main(void)
     /* Inicializa el FIFO */
     mkfifo("Send2Fifo", 0666);
 
-
+    /* Procesa comandos de los clientes */ 
 	while(1)
 	{
 		fd = open("Send2Fifo", O_RDONLY);
