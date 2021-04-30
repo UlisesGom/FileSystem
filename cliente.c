@@ -179,6 +179,7 @@ void EditFile()
 
 /* Envía el comando para borrar un nuevo ARchivo 
 Espera respusta del servidor del texto que contenía el archivo */
+void OpenFile()
 {
 	int fdw;
 	char arr_receive[50];
